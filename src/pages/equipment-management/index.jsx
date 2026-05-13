@@ -257,16 +257,20 @@ export default function EquipmentManagement() {
     }
   };
 
+  const EQUIPMENT_TYPES = [
+    { value: 'excavator', label: 'Pelle hydraulique' },
+    { value: 'drill',     label: 'Foreuse' },
+    { value: 'truck',     label: 'Camion benne' },
+    { value: 'loader',    label: 'Chargeuse' },
+    { value: 'crusher',   label: 'Concasseur' },
+    { value: 'conveyor',  label: 'Convoyeur' },
+    { value: 'pump',      label: 'Pompe' },
+    { value: 'generator', label: 'Groupe électrogène' },
+  ];
+
   const getMachineTypeLabel = (type) => {
-    const types = {
-      'excavator': 'Pelle hydraulique',
-      'drill': 'Foruse',
-      'conveyor': 'Convoyeur',
-      'crusher': 'Concasseur',
-      'truck': 'Camion benne',
-      'loader': 'Chargeuse'
-    };
-    return types[type] || type;
+    const found = EQUIPMENT_TYPES.find(t => t.value === type);
+    return found ? found.label : (type || '');
   };
 
   return (
@@ -649,12 +653,9 @@ export default function EquipmentManagement() {
                   onChange={(e) => setNewEquipment({...newEquipment, type: e.target.value})}
                 >
                   <option value="">Sélectionner un type...</option>
-                  <option value="excavator">Pelle hydraulique</option>
-                  <option value="drill">Foreuse</option>
-                  <option value="conveyor">Convoyeur</option>
-                  <option value="crusher">Concasseur</option>
-                  <option value="truck">Camion benne</option>
-                  <option value="loader">Chargeuse</option>
+                  {EQUIPMENT_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -827,7 +828,7 @@ export default function EquipmentManagement() {
                         ...newOperation,
                         code_agent: val,
                         equipment_id: matched ? matched.id : '',
-                        machine_type: matched ? (matched.type || newOperation.machine_type) : newOperation.machine_type
+                        machine_type: matched ? (matched.type || newOperation.machine_type || '') : newOperation.machine_type
                       });
                     }}
                     className="w-full p-2 rounded border"
@@ -849,14 +850,17 @@ export default function EquipmentManagement() {
                   <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
                     Type de machine
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newOperation.machine_type}
                     onChange={(e) => setNewOperation({...newOperation, machine_type: e.target.value})}
                     className="w-full p-2 rounded border"
                     style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
-                    placeholder="Ex: Pelle hydraulique"
-                  />
+                  >
+                    <option value="">Sélectionner un type...</option>
+                    {EQUIPMENT_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
