@@ -20,6 +20,7 @@ export default function EquipmentManagement() {
   const [newEquipment, setNewEquipment] = useState({
     name: '',
     type: '',
+    type_custom: '',
     model: '',
     serial_number: '',
     location: '',
@@ -83,7 +84,11 @@ export default function EquipmentManagement() {
   };
 
   const handleAddEquipment = async () => {
-    if (!newEquipment.name || !newEquipment.type || !newEquipment.model) {
+    const finalType = newEquipment.type === 'autre'
+      ? (newEquipment.type_custom.trim() || '')
+      : newEquipment.type;
+
+    if (!newEquipment.name || !finalType || !newEquipment.model) {
       toastError('Veuillez remplir les champs obligatoires (Code Engin, Type, Modèle)');
       return;
     }
@@ -91,7 +96,7 @@ export default function EquipmentManagement() {
     try {
       const equipmentToAdd = {
         name: newEquipment.name,
-        type: newEquipment.type,
+        type: finalType,
         model: newEquipment.model,
         serial_number: newEquipment.serial_number || `EQ-${Date.now()}`,
         status: newEquipment.status || 'active',
@@ -102,7 +107,7 @@ export default function EquipmentManagement() {
       if (error) throw error;
       await fetchEquipmentData();
       setShowAddModal(false);
-      setNewEquipment({ name: '', type: '', model: '', serial_number: '', location: '', status: 'active' });
+      setNewEquipment({ name: '', type: '', type_custom: '', model: '', serial_number: '', location: '', status: 'active' });
       toastSuccess('Équipement ajouté avec succès');
     } catch (error) {
       console.error("Erreur ajout équipement:", error);
@@ -266,6 +271,7 @@ export default function EquipmentManagement() {
     { value: 'conveyor',  label: 'Convoyeur' },
     { value: 'pump',      label: 'Pompe' },
     { value: 'generator', label: 'Groupe électrogène' },
+    { value: 'autre',     label: 'Autre (préciser)' },
   ];
 
   const getMachineTypeLabel = (type) => {
@@ -627,12 +633,38 @@ export default function EquipmentManagement() {
 
       {/* Modal Ajout Équipement */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="rounded-xl p-6 w-full max-w-md" style={{ background: "var(--color-card)" }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" style={{ background: "var(--color-card)" }}>
             <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--color-foreground)" }}>
               Ajouter un équipement
             </h3>
             <div className="space-y-4">
+              {/* Type en premier — champ le plus important */}
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Type d'équipement *</label>
+                <select
+                  className="w-full p-2 rounded border"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                  value={newEquipment.type}
+                  onChange={(e) => setNewEquipment({...newEquipment, type: e.target.value, type_custom: ''})}
+                >
+                  <option value="">— Sélectionner un type —</option>
+                  {EQUIPMENT_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                {newEquipment.type === 'autre' && (
+                  <input
+                    type="text"
+                    placeholder="Précisez le type d'équipement..."
+                    value={newEquipment.type_custom}
+                    onChange={(e) => setNewEquipment({...newEquipment, type_custom: e.target.value})}
+                    className="w-full p-2 rounded border mt-2"
+                    style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                    autoFocus
+                  />
+                )}
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Code Engin *</label>
                 <input
@@ -643,20 +675,6 @@ export default function EquipmentManagement() {
                   className="w-full p-2 rounded border"
                   style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Type *</label>
-                <select
-                  className="w-full p-2 rounded border"
-                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
-                  value={newEquipment.type}
-                  onChange={(e) => setNewEquipment({...newEquipment, type: e.target.value})}
-                >
-                  <option value="">Sélectionner un type...</option>
-                  {EQUIPMENT_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Modèle *</label>
@@ -705,7 +723,7 @@ export default function EquipmentManagement() {
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
-                <Button variant="outline" onClick={() => { setShowAddModal(false); setNewEquipment({ name: '', type: '', model: '', serial_number: '', location: '', status: 'active' }); }}>
+                <Button variant="outline" onClick={() => { setShowAddModal(false); setNewEquipment({ name: '', type: '', type_custom: '', model: '', serial_number: '', location: '', status: 'active' }); }}>
                   Annuler
                 </Button>
                 <Button variant="default" onClick={handleAddEquipment}>
