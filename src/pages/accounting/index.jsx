@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import AppLayout from "components/navigation/AppLayout";
@@ -7,6 +7,7 @@ import Button from "components/ui/Button";
 import { miningService } from "../../config/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { toastSuccess, toastError } from "../../utils/toast";
+import { exportFinancialReport } from "../../utils/excelExport";
 
 export default function Accounting() {
   const navigate = useNavigate();
@@ -17,6 +18,14 @@ export default function Accounting() {
   const [viewTransaction, setViewTransaction] = useState(null);
   const [editTransaction, setEditTransaction] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  // ── Filtres ────────────────────────────────────────────────────────────────
+  const [filterType,       setFilterType]       = useState('all');   // all | income | expense
+  const [filterDateFrom,   setFilterDateFrom]   = useState('');
+  const [filterDateTo,     setFilterDateTo]     = useState('');
+  const [filterCategory,   setFilterCategory]   = useState('');
+  const [filterSearch,     setFilterSearch]     = useState('');
+  // ──────────────────────────────────────────────────────────────────────────
 
   const [newTransaction, setNewTransaction] = useState({
     date: '',
@@ -53,19 +62,44 @@ export default function Accounting() {
     }
   };
 
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-  const netProfit = totalIncome - totalExpenses;
-  const pendingExpenses = transactions.filter(t => t.type === 'expense' && t.status === 'pending').reduce((sum, t) => sum + t.amount, 0);
+  // ── Transactions filtrées (mémorisées) ────────────────────────────────────
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      if (filterType !== 'all' && t.type !== filterType) return false;
+      if (filterDateFrom && t.date < filterDateFrom) return false;
+      if (filterDateTo   && t.date > filterDateTo)   return false;
+      if (filterCategory && !t.category?.toLowerCase().includes(filterCategory.toLowerCase())) return false;
+      if (filterSearch) {
+        const q = filterSearch.toLowerCase();
+        if (
+          !t.description?.toLowerCase().includes(q) &&
+          !t.category?.toLowerCase().includes(q) &&
+          !t.client_supplier?.toLowerCase().includes(q) &&
+          !t.reference?.toLowerCase().includes(q)
+        ) return false;
+      }
+      return true;
+    });
+  }, [transactions, filterType, filterDateFrom, filterDateTo, filterCategory, filterSearch]);
 
-  // Données pour le graphique circulaire des dépenses par catégorie
-  const expensesByCategory = transactions
+  const resetFilters = () => {
+    setFilterType('all');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setFilterCategory('');
+    setFilterSearch('');
+  };
+
+  // ── KPIs calculés sur les transactions filtrées ────────────────────────────
+  const totalIncome   = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const totalExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const netProfit     = totalIncome - totalExpenses;
+
+  // Graphique circulaire — dépenses par catégorie (données filtrées)
+  const expensesByCategory = filteredTransactions
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => {
-      if (!acc[t.category]) {
-        acc[t.category] = 0;
-      }
-      acc[t.category] += t.amount;
+      acc[t.category] = (acc[t.category] || 0) + (parseFloat(t.amount) || 0);
       return acc;
     }, {});
 
@@ -75,30 +109,20 @@ export default function Accounting() {
     color: ['#2C5530', '#D69E2E', '#E53E3E', '#3182CE', '#805AD5'][index % 5]
   }));
 
-  // Données pour le graphique d'évolution mensuelle
-  const monthlyData = transactions.reduce((acc, t) => {
-    const date = new Date(t.date);
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    const monthName = date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-
-    if (!acc[monthKey]) {
-      acc[monthKey] = { month: monthName, revenus: 0, depenses: 0 };
-    }
-
-    if (t.type === 'income') {
-      acc[monthKey].revenus += t.amount;
-    } else {
-      acc[monthKey].depenses += t.amount;
-    }
-
-    return acc;
-  }, {});
-
-  const lineChartData = Object.values(monthlyData).sort((a, b) => {
-    const dateA = new Date(a.month + ' 01');
-    const dateB = new Date(b.month + ' 01');
-    return dateA - dateB;
-  });
+  // Graphique évolution mensuelle (données filtrées)
+  const lineChartData = useMemo(() => {
+    const monthly = filteredTransactions.reduce((acc, t) => {
+      if (!t.date) return acc;
+      const d = new Date(t.date);
+      const key  = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const name = d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+      if (!acc[key]) acc[key] = { key, month: name, revenus: 0, depenses: 0 };
+      if (t.type === 'income')  acc[key].revenus  += parseFloat(t.amount) || 0;
+      else                      acc[key].depenses += parseFloat(t.amount) || 0;
+      return acc;
+    }, {});
+    return Object.values(monthly).sort((a, b) => a.key.localeCompare(b.key));
+  }, [filteredTransactions]);
 
   const handleAddTransaction = async () => {
     if (!newTransaction.date || !newTransaction.category || !newTransaction.description || !newTransaction.amount) {
@@ -202,20 +226,16 @@ export default function Accounting() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant="default"
-            iconName="Plus"
-            iconPosition="left"
-            onClick={() => setShowAddModal(true)}
-          >
+          <Button variant="outline" iconName="FileSpreadsheet" iconPosition="left"
+            onClick={() => exportFinancialReport('month', filteredTransactions)}>
+            Exporter Excel
+          </Button>
+          <Button variant="default" iconName="Plus" iconPosition="left"
+            onClick={() => setShowAddModal(true)}>
             Ajouter Transaction
           </Button>
-          <Button
-            variant="outline"
-            iconName="ArrowLeft"
-            iconPosition="left"
-            onClick={() => navigate("/")}
-          >
+          <Button variant="outline" iconName="ArrowLeft" iconPosition="left"
+            onClick={() => navigate("/")}>
             Retour
           </Button>
         </div>
@@ -259,6 +279,100 @@ export default function Accounting() {
         </div>
       </div>
 
+      {/* ── Barre de filtres ─────────────────────────────────────────────── */}
+      <div className="rounded-xl border p-4 mb-4" style={{ background: "var(--color-card)" }}>
+        <div className="flex flex-wrap gap-3 items-end">
+          {/* Recherche libre */}
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-muted-foreground)" }}>Recherche</label>
+            <div className="relative">
+              <Icon name="Search" size={14} color="var(--color-muted-foreground)" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                value={filterSearch}
+                onChange={e => setFilterSearch(e.target.value)}
+                placeholder="Description, catégorie, client…"
+                className="w-full pl-7 pr-3 py-2 rounded border text-sm"
+                style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+              />
+            </div>
+          </div>
+
+          {/* Type */}
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-muted-foreground)" }}>Type</label>
+            <select
+              value={filterType}
+              onChange={e => setFilterType(e.target.value)}
+              className="w-full p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+            >
+              <option value="all">Tous</option>
+              <option value="income">Revenus</option>
+              <option value="expense">Dépenses</option>
+            </select>
+          </div>
+
+          {/* Catégorie */}
+          <div className="min-w-[150px]">
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-muted-foreground)" }}>Catégorie</label>
+            <input
+              type="text"
+              value={filterCategory}
+              onChange={e => setFilterCategory(e.target.value)}
+              placeholder="ex: Carburant"
+              className="w-full p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+            />
+          </div>
+
+          {/* Date de */}
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-muted-foreground)" }}>Du</label>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={e => setFilterDateFrom(e.target.value)}
+              className="w-full p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+            />
+          </div>
+
+          {/* Date à */}
+          <div className="min-w-[140px]">
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--color-muted-foreground)" }}>Au</label>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={e => setFilterDateTo(e.target.value)}
+              className="w-full p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+            />
+          </div>
+
+          {/* Reset */}
+          <button
+            onClick={resetFilters}
+            className="flex items-center gap-1.5 px-3 py-2 rounded border text-sm"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-muted-foreground)", background: "transparent" }}
+            title="Réinitialiser les filtres"
+          >
+            <Icon name="X" size={13} />
+            Réinitialiser
+          </button>
+        </div>
+
+        {/* Résumé du filtre actif */}
+        <div className="mt-2 flex items-center gap-2 text-xs" style={{ color: "var(--color-muted-foreground)" }}>
+          <span>{filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} affichée{filteredTransactions.length !== 1 ? 's' : ''}</span>
+          {filteredTransactions.length !== transactions.length && (
+            <span style={{ color: "var(--color-warning)" }}>
+              (sur {transactions.length} au total)
+            </span>
+          )}
+        </div>
+      </div>
+
       <div className="rounded-xl border" style={{ background: "var(--color-card)" }}>
         <div className="p-4 border-b" style={{ borderColor: "var(--color-border)" }}>
           <h2 className="text-lg font-semibold" style={{ color: "var(--color-foreground)" }}>
@@ -291,8 +405,14 @@ export default function Accounting() {
                     Aucune transaction trouvée
                   </td>
                 </tr>
+              ) : filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="p-8 text-center" style={{ color: "var(--color-muted-foreground)" }}>
+                    Aucune transaction ne correspond aux filtres sélectionnés
+                  </td>
+                </tr>
               ) : (
-                transactions.map((item) => (
+                filteredTransactions.map((item) => (
                   <tr key={item.id} className="border-b" style={{ borderColor: "var(--color-border)" }}>
                     <td className="p-4" style={{ color: "var(--color-foreground)" }}>{item.date}</td>
                     <td className="p-4">

@@ -7,6 +7,12 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { toastError, toastSuccess } from "../../utils/toast.jsx";
 import { miningService } from "../../config/supabase.js";
 import { useAuth } from "../../context/AuthContext";
+import {
+  exportProductionReport,
+  exportFuelReport,
+  exportFinancialReport,
+  exportEquipmentReport,
+} from "../../utils/excelExport";
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -145,20 +151,17 @@ ${new Date().toLocaleString()}`;
 
   const handleDownloadReport = async (report) => {
     try {
-      const content = generateReportContent(report);
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${report.name.replace(/[^a-zA-Z0-9]/g, '_')}_${report.period.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      alert(`Téléchargement started: ${report.name}`);
+      switch (report.type) {
+        case 'production':  exportProductionReport('month');  break;
+        case 'financial':   exportFinancialReport('month');   break;
+        case 'maintenance': exportEquipmentReport('month');   break;
+        case 'summary':     exportFinancialReport('quarter'); break;
+        default:            exportProductionReport('month');  break;
+      }
+      toastSuccess(`Rapport Excel téléchargé : ${report.name}`);
     } catch (error) {
-      console.error("Erreur:", error);
-      alert("Erreur lors du téléchargement");
+      console.error("Erreur export Excel:", error);
+      toastError("Erreur lors du téléchargement Excel");
     }
   };
 

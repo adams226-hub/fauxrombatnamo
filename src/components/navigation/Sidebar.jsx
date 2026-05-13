@@ -36,14 +36,6 @@ const NAV_ITEMS = [
     badge: null,
   },
   {
-    id: 'data-explorer',
-    label: 'Données',
-    icon: 'Database',
-    path: '/data-explorer',
-    roles: ['admin', 'directeur', 'comptable', 'equipement', 'supervisor'],
-    badge: null,
-  },
-  {
     id: 'accounting',
     label: 'Comptabilité',
     icon: 'DollarSign',

@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
+import {
+  exportProductionReport,
+  exportFuelReport,
+  exportFinancialReport,
+  exportEquipmentReport,
+} from "../../../utils/excelExport";
 
 export default function ExportPanel() {
   const navigate = useNavigate();
@@ -250,87 +256,24 @@ export default function ExportPanel() {
     setTimeout(() => setExporting(null), 1500);
   };
 
-  // Fonction pour exporter en Excel (CSV)
+  // Export global Production — format Excel (.xlsx)
   const handleExportExcel = () => {
     setExporting("excel");
-    
-    // Données de production avec les bonnes dimensions
-    const productionData = [
-      { dimension: 'Minerai', quantity: 300 },
-      { dimension: 'Forage', quantity: 150 },
-      { dimension: '0/4', quantity: 200 },
-      { dimension: '0/5', quantity: 180 },
-      { dimension: '0/6', quantity: 160 },
-      { dimension: '5/15', quantity: 140 },
-      { dimension: '8/15', quantity: 120 },
-      { dimension: '15/25', quantity: 100 },
-      { dimension: '4/6', quantity: 90 },
-      { dimension: '10/14', quantity: 80 },
-      { dimension: '6/10', quantity: 70 },
-      { dimension: '0/31,5', quantity: 60 }
-    ];
-    
-    const totalProduction = productionData.reduce((sum, p) => sum + p.quantity, 0);
-    
-    // Créer un CSV avec les données
-    const csvData = [
-      ['ROMBAT Mining Platform - Export Excel'],
-      [`Période: ${dateRange === 'day' ? "Aujourd'hui" : dateRange === 'week' ? "Cette semaine" : dateRange === 'month' ? "Ce mois" : "Trimestre"}`],
-      [`Date: ${new Date().toLocaleDateString('fr-FR')}`],
-      [],
-      ['DIMENSION', 'QUANTITÉ (tonnes)', 'POURCENTAGE']
-    ];
-    
-    // Ajouter chaque dimension avec sa valeur
-    productionData.forEach(p => {
-      const percentage = ((p.quantity / totalProduction) * 100).toFixed(1);
-      csvData.push([p.dimension, p.quantity.toString(), percentage + '%']);
-    });
-    
-    // Ajouter le total
-    csvData.push(['TOTAL', totalProduction.toString(), '100%']);
-    csvData.push([]);
-    csvData.push(['RÉSUMÉ FINANCIER']);
-    csvData.push(['Revenus', '60700']);
-    csvData.push(['Dépenses', '13960']);
-    csvData.push(['Bénéfice', '46740']);
-    
-    const csvContent = csvData.map(row => row.join(';')).join('\n');
-    downloadFile(csvContent, `ROMBAT_Export_${dateRange}_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-    
-    setTimeout(() => setExporting(null), 1500);
+    exportProductionReport(dateRange);
+    setTimeout(() => setExporting(null), 1200);
   };
 
-  // Fonction pour télécharger un rapport spécifique
+  // Télécharger un rapport spécifique en Excel (.xlsx)
   const handleDownloadReport = (reportType) => {
     setExporting(reportType);
-    
-    let content, filename;
-    
     switch (reportType) {
-      case 'report-0': // Production
-        content = generateProductionReport();
-        filename = `ROMBAT_Rapport_Production_${new Date().toISOString().split('T')[0]}.txt`;
-        break;
-      case 'report-1': // Carburant
-        content = generateFuelReport();
-        filename = `ROMBAT_Rapport_Carburant_${new Date().toISOString().split('T')[0]}.txt`;
-        break;
-      case 'report-2': // Financier
-        content = generateFinancialReport();
-        filename = `ROMBAT_Rapport_Financier_${new Date().toISOString().split('T')[0]}.txt`;
-        break;
-      case 'report-3': // Équipement
-        content = generateEquipmentReport();
-        filename = `ROMBAT_Rapport_Equipement_${new Date().toISOString().split('T')[0]}.txt`;
-        break;
-      default:
-        content = "Rapport Amp Mines et Carrieres";
-        filename = `ROMBAT_Rapport_${new Date().toISOString().split('T')[0]}.txt`;
+      case 'report-0': exportProductionReport(dateRange); break;
+      case 'report-1': exportFuelReport(dateRange);       break;
+      case 'report-2': exportFinancialReport(dateRange);  break;
+      case 'report-3': exportEquipmentReport(dateRange);  break;
+      default: break;
     }
-    
-    downloadFile(content, filename);
-    setTimeout(() => setExporting(null), 1500);
+    setTimeout(() => setExporting(null), 1200);
   };
 
   return (

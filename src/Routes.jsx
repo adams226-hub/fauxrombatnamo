@@ -19,7 +19,6 @@ import Administration from "./pages/administration";
 import AdminComplete from "./pages/administration/admin-complete";
 import AdminWorking from "./pages/administration/admin-working";
 import StockManagement from "./pages/stock-management";
-import DataExplorer from "./pages/data-explorer";
 
 // Composant pour la redirection automatique basée sur le rôle
 function RoleBasedRedirect() {
@@ -169,12 +168,6 @@ const AppRoutes = () => {
         </ProtectedRouteWrapper>
       } />
       
-      <Route path="/data-explorer" element={
-        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'comptable', 'equipement', 'supervisor']}>
-          <DataExplorer />
-        </ProtectedRouteWrapper>
-      } />
-
       <Route path="/stock-management" element={
         <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'supervisor', 'operator']}>
           <StockManagement />
