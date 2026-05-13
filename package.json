@@ -61,7 +61,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build --sourcemap",
+    "build": "vite build",
     "serve": "vite preview",
     "check-db": "node check-supabase.js"
   },
