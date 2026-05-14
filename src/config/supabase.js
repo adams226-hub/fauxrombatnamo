@@ -783,4 +783,97 @@ export const miningService = {
     });
     return { data: Object.values(months), error: null };
   },
+
+  // ============================================================
+  // MAINTENANCE PRÉVENTIVE
+  // ============================================================
+
+  async getMaintenancePlans() {
+    const { data, error } = await supabase
+      .from('maintenance_plans')
+      .select('*, equipment:equipment_id(name, type, serial_number)')
+      .order('next_due_date', { ascending: true });
+    return { data, error };
+  },
+
+  async createMaintenancePlan(plan) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('maintenance_plans')
+      .insert([{ ...plan, created_by: user?.id || null }])
+      .select('*, equipment:equipment_id(name, type, serial_number)')
+      .single();
+    return { data, error };
+  },
+
+  async updateMaintenancePlan(id, updates) {
+    const { data, error } = await supabase
+      .from('maintenance_plans')
+      .update(updates)
+      .eq('id', id)
+      .select('*, equipment:equipment_id(name, type, serial_number)')
+      .single();
+    return { data, error };
+  },
+
+  async deleteMaintenancePlan(id) {
+    const { error } = await supabase.from('maintenance_plans').delete().eq('id', id);
+    return { error };
+  },
+
+  // ============================================================
+  // PIÈCES DE RECHANGE
+  // ============================================================
+
+  async getSpareParts() {
+    const { data, error } = await supabase
+      .from('spare_parts')
+      .select('*')
+      .order('name', { ascending: true });
+    return { data, error };
+  },
+
+  async createSparePart(part) {
+    const { data, error } = await supabase
+      .from('spare_parts')
+      .insert([part])
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async updateSparePart(id, updates) {
+    const { data, error } = await supabase
+      .from('spare_parts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async deleteSparePart(id) {
+    const { error } = await supabase.from('spare_parts').delete().eq('id', id);
+    return { error };
+  },
+
+  async getSparePartMovements(partId = null) {
+    let query = supabase
+      .from('spare_parts_movements')
+      .select('*, spare_part:part_id(name, reference)')
+      .order('movement_date', { ascending: false });
+    if (partId) query = query.eq('part_id', partId);
+    const { data, error } = await query;
+    return { data, error };
+  },
+
+  async addSparePartMovement(movement) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('spare_parts_movements')
+      .insert([{ ...movement, created_by: user?.id || null }])
+      .select('*, spare_part:part_id(name, reference)')
+      .single();
+    return { data, error };
+  },
 };

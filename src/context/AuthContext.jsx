@@ -5,11 +5,11 @@ const AuthContext = createContext(null);
 
 // Permissions par rôle : quelles routes chaque rôle peut accéder
 const ROLE_PERMISSIONS = {
-  admin:        ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/accounting', '/reports', '/administration', '/stock-management', '/data-explorer'],
-  directeur:    ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/accounting', '/reports', '/stock-management', '/data-explorer'],
-  chef_de_site: ['/', '/equipment-management', '/data-explorer'],
+  admin:        ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/accounting', '/administration', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
+  directeur:    ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/accounting', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
+  chef_de_site: ['/', '/equipment-management', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
   comptable:    ['/', '/accounting', '/data-explorer'],
-  equipement:   ['/', '/equipment-management', '/accounting', '/data-explorer'],
+  equipement:   ['/', '/equipment-management', '/accounting', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
   supervisor:   ['/', '/production-management', '/stock-management', '/data-explorer'],
   operator:     ['/', '/production-management', '/stock-management']
 };
