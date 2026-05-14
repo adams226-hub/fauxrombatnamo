@@ -241,3 +241,79 @@ export function exportEquipmentReport(range = 'month', equipment = []) {
   XLSX.utils.book_append_sheet(wb, listSheet,  'Équipements');
   downloadXLSX(wb, `AMP_Rapport_Equipements_${fileDate()}.xlsx`);
 }
+
+// ── 5. HUILE ───────────────────────────────────────────────────────────────────
+export function exportOilReport(range = 'month', oilTransactions = []) {
+  const entries = oilTransactions.filter(t => t.transaction_type === 'in');
+  const exits   = oilTransactions.filter(t => t.transaction_type === 'out');
+
+  const totalEntryQty = entries.reduce((s, t) => s + (parseFloat(t.quantity) || 0), 0);
+  const totalExitQty  = exits.reduce((s,  t) => s + (parseFloat(t.quantity) || 0), 0);
+  const totalCost     = entries.reduce((s, t) => s + ((parseFloat(t.quantity) || 0) * (parseFloat(t.cost_per_unit) || 0)), 0);
+
+  // Stock par type d'huile
+  const OIL_TYPES = ['Huile Moteur','Huile Hydraulique','Huile Transmission','Huile Différentiel','Graisse','Autre'];
+  const stockRows = OIL_TYPES.map(type => {
+    const in_  = oilTransactions.filter(t => t.oil_type === type && t.transaction_type === 'in').reduce((s,t) => s + (parseFloat(t.quantity)||0), 0);
+    const out_ = oilTransactions.filter(t => t.oil_type === type && t.transaction_type === 'out').reduce((s,t) => s + (parseFloat(t.quantity)||0), 0);
+    return [type, in_, out_, Math.max(0, in_ - out_)];
+  });
+
+  const synthSheet = makeSheet([
+    [COMPANY],
+    [PLATFORM],
+    ['RAPPORT GESTION HUILE'],
+    [],
+    ['Période',             periodLabel(range)],
+    ['Date de génération',  today()],
+    [],
+    ['SYNTHÈSE', ''],
+    ['Total Entrées',      `${totalEntryQty.toFixed(1)} L`],
+    ['Total Sorties',      `${totalExitQty.toFixed(1)} L`],
+    ['Coût Total Achats',  `${totalCost.toLocaleString('fr-FR')} DA`],
+    [],
+    ['STOCK PAR TYPE D\'HUILE', '', '', ''],
+    ['Type d\'Huile', 'Entrées (L)', 'Sorties (L)', 'Stock Restant (L)'],
+    ...stockRows,
+  ], [30, 15, 15, 20]);
+
+  const entrySheet = makeSheet([
+    ['ENTRÉES HUILE (ACHATS / RÉCEPTIONS)'],
+    [],
+    ['Date', 'Type d\'Huile', 'Quantité (L)', 'Prix/L (DA)', 'Coût Total (DA)', 'Fournisseur', 'Notes'],
+    ...entries.map(t => [
+      t.transaction_date || '',
+      t.oil_type || '',
+      parseFloat(t.quantity) || 0,
+      parseFloat(t.cost_per_unit) || '',
+      ((parseFloat(t.quantity)||0) * (parseFloat(t.cost_per_unit)||0)).toFixed(2),
+      t.supplier || '',
+      t.notes || '',
+    ]),
+    [],
+    ['', '', totalEntryQty.toFixed(1), '', totalCost.toFixed(2), 'TOTAL', ''],
+  ], [15, 22, 14, 14, 18, 25, 30]);
+
+  const exitSheet = makeSheet([
+    ['SORTIES HUILE (VIDANGES / APPOINTS)'],
+    [],
+    ['Date', 'Type d\'Huile', 'Équipement', 'Quantité (L)', 'Motif', 'Opérateur', 'Notes'],
+    ...exits.map(t => [
+      t.transaction_date || '',
+      t.oil_type || '',
+      t.equipment?.name || '',
+      parseFloat(t.quantity) || 0,
+      t.reason || '',
+      t.operator_name || '',
+      t.notes || '',
+    ]),
+    [],
+    ['', '', 'TOTAL SORTIES', totalExitQty.toFixed(1), '', '', ''],
+  ], [15, 22, 28, 14, 22, 20, 30]);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, synthSheet, 'Synthèse');
+  XLSX.utils.book_append_sheet(wb, entrySheet, 'Entrées');
+  XLSX.utils.book_append_sheet(wb, exitSheet,  'Sorties');
+  downloadXLSX(wb, `AMP_Rapport_Huile_${fileDate()}.xlsx`);
+}

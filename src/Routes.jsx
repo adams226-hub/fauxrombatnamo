@@ -16,6 +16,7 @@ import FuelManagement from "./pages/fuel-management";
 import Accounting from "./pages/accounting";
 import MaintenancePrevention from "./pages/maintenance-prevention";
 import SpareParts from "./pages/spare-parts";
+import OilManagement from "./pages/oil-management";
 import Administration from "./pages/administration";
 import AdminComplete from "./pages/administration/admin-complete";
 import AdminWorking from "./pages/administration/admin-working";
@@ -151,6 +152,12 @@ const AppRoutes = () => {
       <Route path="/spare-parts" element={
         <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'chef_de_site', 'equipement']}>
           <SpareParts />
+        </ProtectedRouteWrapper>
+      } />
+
+      <Route path="/oil-management" element={
+        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'chef_de_site', 'equipement']}>
+          <OilManagement />
         </ProtectedRouteWrapper>
       } />
 

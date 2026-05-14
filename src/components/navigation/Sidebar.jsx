@@ -60,6 +60,14 @@ const NAV_ITEMS = [
     badge: null,
   },
   {
+    id: 'oil-management',
+    label: 'Gestion Huile',
+    icon: 'Droplets',
+    path: '/oil-management',
+    roles: ['admin', 'directeur', 'chef_de_site', 'equipement'],
+    badge: null,
+  },
+  {
     id: 'administration',
     label: 'Administration',
     icon: 'Settings',

@@ -876,4 +876,65 @@ export const miningService = {
       .single();
     return { data, error };
   },
+
+  // ============================================================
+  // GESTION HUILE
+  // ============================================================
+
+  async getOilTransactions() {
+    const { data, error } = await supabase
+      .from('oil_transactions')
+      .select('*, equipment:equipment_id(name, type, serial_number)')
+      .order('transaction_date', { ascending: false });
+    return { data, error };
+  },
+
+  async addOilTransaction(transaction) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('oil_transactions')
+      .insert([{ ...transaction, created_by: user?.id || null }])
+      .select('*, equipment:equipment_id(name, type, serial_number)')
+      .single();
+    return { data, error };
+  },
+
+  async deleteOilTransaction(id) {
+    const { error } = await supabase.from('oil_transactions').delete().eq('id', id);
+    return { error };
+  },
+
+  async getOilStockSummary() {
+    const { data, error } = await supabase
+      .from('oil_transactions')
+      .select('oil_type, transaction_type, quantity');
+    if (error) return { data: null, error };
+    const OIL_TYPES = ['Huile Moteur', 'Huile Hydraulique', 'Huile Transmission', 'Huile Différentiel', 'Graisse', 'Autre'];
+    const summary = OIL_TYPES.map(type => {
+      const rows = (data || []).filter(r => r.oil_type === type);
+      const totalIn  = rows.filter(r => r.transaction_type === 'in').reduce((s, r) => s + parseFloat(r.quantity || 0), 0);
+      const totalOut = rows.filter(r => r.transaction_type === 'out').reduce((s, r) => s + parseFloat(r.quantity || 0), 0);
+      return { oil_type: type, total_in: totalIn, total_out: totalOut, stock: Math.max(0, totalIn - totalOut) };
+    });
+    return { data: summary, error: null };
+  },
+
+  // ── Carburant: entrées et sorties ────────────────────────────
+  async getFuelEntries() {
+    const { data, error } = await supabase
+      .from('fuel_entries')
+      .select('*')
+      .order('entry_date', { ascending: false });
+    return { data, error };
+  },
+
+  async addFuelEntry(entry) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('fuel_entries')
+      .insert([{ ...entry, created_by: user?.id || null }])
+      .select()
+      .single();
+    return { data, error };
+  },
 };

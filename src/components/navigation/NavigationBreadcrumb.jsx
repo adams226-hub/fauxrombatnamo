@@ -3,14 +3,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from 'components/AppIcon';
 
 const ROUTE_MAP = {
-  '/executive-dashboard': { label: 'Tableau de Bord', parent: null, icon: 'LayoutDashboard' },
-  '/production-management': { label: 'Production', parent: null, icon: 'BarChart3' },
-  '/equipment-management': { label: 'Équipement', parent: null, icon: 'Wrench' },
-  '/fuel-management': { label: 'Carburant', parent: null, icon: 'Fuel' },
-  '/accounting': { label: 'Comptabilité', parent: null, icon: 'Calculator' },
-  '/reports': { label: 'Rapports', parent: null, icon: 'FileText' },
-  '/administration': { label: 'Administration', parent: null, icon: 'Settings' },
-  '/user-authentication': { label: 'Authentification', parent: null, icon: 'Lock' },
+  '/executive-dashboard':    { label: 'Tableau de Bord',       parent: null, icon: 'LayoutDashboard' },
+  '/production-management':  { label: 'Production',            parent: null, icon: 'BarChart3' },
+  '/equipment-management':   { label: 'Équipement',            parent: null, icon: 'Wrench' },
+  '/fuel-management':        { label: 'Carburant',             parent: null, icon: 'Fuel' },
+  '/oil-management':         { label: 'Huile',                 parent: null, icon: 'Droplets' },
+  '/accounting':             { label: 'Comptabilité',          parent: null, icon: 'Calculator' },
+  '/maintenance-prevention': { label: 'Maintenance Préventive',parent: null, icon: 'ShieldAlert' },
+  '/spare-parts':            { label: 'Pièces de Rechange',    parent: null, icon: 'Package' },
+  '/administration':         { label: 'Administration',        parent: null, icon: 'Settings' },
+  '/user-authentication':    { label: 'Authentification',      parent: null, icon: 'Lock' },
 };
 
 export default function NavigationBreadcrumb({ className = '' }) {

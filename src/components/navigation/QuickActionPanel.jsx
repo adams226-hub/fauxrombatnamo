@@ -7,19 +7,20 @@ const ROLE_QUICK_ACTIONS = {
     { id: 'production-entry', label: 'Saisie Production', icon: 'Plus', path: '/production-management', color: 'var(--color-primary)' },
     { id: 'equipment-status', label: 'Statut Équipement', icon: 'Activity', path: '/equipment-management', color: '#3182CE' },
     { id: 'new-expense', label: 'Nouvelle Dépense', icon: 'Receipt', path: '/accounting', color: '#805AD5' },
-    { id: 'generate-report', label: 'Générer Rapport', icon: 'FileDown', path: '/reports', color: 'var(--color-accent)' },
+    { id: 'maintenance', label: 'Maintenance', icon: 'ShieldAlert', path: '/maintenance-prevention', color: 'var(--color-accent)' },
   ],
   directeur: [
     { id: 'dashboard', label: 'Vue Exécutive', icon: 'TrendingUp', path: '/executive-dashboard', color: 'var(--color-accent)' },
-    { id: 'reports', label: 'Rapports', icon: 'FileText', path: '/reports', color: 'var(--color-primary)' },
     { id: 'production', label: 'Production', icon: 'BarChart3', path: '/production-management', color: '#3182CE' },
+    { id: 'maintenance', label: 'Maintenance', icon: 'ShieldAlert', path: '/maintenance-prevention', color: '#E53E3E' },
   ],
   chef_de_site: [
     { id: 'equipment-status', label: 'Statut Équipement', icon: 'Wrench', path: '/equipment-management', color: '#3182CE' },
+    { id: 'maintenance', label: 'Maintenance', icon: 'ShieldAlert', path: '/maintenance-prevention', color: '#E53E3E' },
+    { id: 'spare-parts', label: 'Pièces de Rechange', icon: 'Package', path: '/spare-parts', color: '#805AD5' },
   ],
   comptable: [
     { id: 'new-expense', label: 'Nouvelle Dépense', icon: 'Receipt', path: '/accounting', color: '#805AD5' },
-    { id: 'generate-report', label: 'Générer Rapport', icon: 'FileDown', path: '/reports', color: 'var(--color-primary)' },
     { id: 'accounting', label: 'Comptabilité', icon: 'Calculator', path: '/accounting', color: 'var(--color-accent)' },
   ],
 };
