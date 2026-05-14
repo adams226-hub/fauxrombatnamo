@@ -93,6 +93,9 @@ export function AuthProvider({ children }) {
       // Le profil sera chargé via onAuthStateChange
       return { success: true };
     } catch (err) {
+      if (err?.message?.toLowerCase().includes('fetch')) {
+        return { success: false, error: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.' };
+      }
       return { success: false, error: 'Erreur de connexion. Veuillez réessayer.' };
     }
   };

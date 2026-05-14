@@ -157,21 +157,21 @@ export default function Login() {
               Comptes disponibles :
             </h3>
             <div className="space-y-1 text-xs" style={{ color: "var(--color-muted-foreground)" }}>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-4">
                 <span>Admin:</span>
-                <span style={{ color: "var(--color-foreground)" }}>admin@rombat.com</span>
+                <span style={{ color: "var(--color-foreground)" }}>admin1@rombat.com / Admin@2026!</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-4">
                 <span>Directeur:</span>
-                <span style={{ color: "var(--color-foreground)" }}>directeur@rombat.com</span>
+                <span style={{ color: "var(--color-foreground)" }}>directeur@rombat.com / Directeur@2026!</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-4">
                 <span>Superviseur:</span>
-                <span style={{ color: "var(--color-foreground)" }}>supervisor@rombat.com</span>
+                <span style={{ color: "var(--color-foreground)" }}>supervisor@rombat.com / Supervisor@2026!</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-4">
                 <span>Comptable:</span>
-                <span style={{ color: "var(--color-foreground)" }}>comptable@rombat.com</span>
+                <span style={{ color: "var(--color-foreground)" }}>comptable@rombat.com / Comptable@2026!</span>
               </div>
             </div>
             <p className="text-xs mt-2" style={{ color: "var(--color-muted-foreground)" }}>
