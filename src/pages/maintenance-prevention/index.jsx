@@ -132,6 +132,9 @@ export default function MaintenancePrevention() {
     const payload = {
       ...formData,
       equipment_id: formData.equipment_id || null,
+      last_done_date: formData.last_done_date || null,
+      next_due_date: formData.next_due_date || null,
+      assigned_to: formData.assigned_to || null,
       estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration, 10) : null,
     };
     let res;
