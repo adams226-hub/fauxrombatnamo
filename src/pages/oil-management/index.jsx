@@ -44,6 +44,7 @@ export default function OilManagement() {
     transaction_type: "in",
     transaction_date: "",
     oil_type: "",
+    oil_type_custom: "",
     quantity: "",
     unit: "L",
     cost_per_unit: "",
@@ -98,12 +99,19 @@ export default function OilManagement() {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
+    if (form.oil_type === "Autre" && !form.oil_type_custom.trim()) {
+      toast.error("Veuillez préciser le type d'huile");
+      return;
+    }
     const loadingId = hotToast.loading("Enregistrement...", { position: "top-right" });
     try {
+      const resolvedOilType = form.oil_type === 'Autre' && form.oil_type_custom.trim()
+        ? form.oil_type_custom.trim()
+        : form.oil_type;
       const payload = {
         transaction_date: form.transaction_date,
         transaction_type: form.transaction_type,
-        oil_type: form.oil_type,
+        oil_type: resolvedOilType,
         quantity: parseFloat(form.quantity),
         unit: form.unit || "L",
         notes: form.notes || null,
@@ -543,6 +551,23 @@ export default function OilManagement() {
                   </select>
                 </div>
               </div>
+
+              {form.oil_type === "Autre" && (
+                <div>
+                  <label className={labelClass} style={{ color: "var(--color-foreground)" }}>
+                    Préciser le type d'huile *
+                  </label>
+                  <input
+                    type="text"
+                    value={form.oil_type_custom}
+                    onChange={(e) => handleFieldChange("oil_type_custom", e.target.value)}
+                    className={inputClass}
+                    style={inputStyle}
+                    placeholder="Ex: Huile boîte de vitesses, Huile direction assistée..."
+                    autoFocus
+                  />
+                </div>
+              )}
 
               <div>
                 <label className={labelClass} style={{ color: "var(--color-foreground)" }}>

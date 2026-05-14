@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { parseObjective, formatObjective, calculateProgress } from "../../utils/objectiveParser";
-import { toastError, toastSuccess, toastLoading } from "../../utils/toast";
+import { toastError, toastSuccess } from "../../utils/toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { miningService } from "../../config/supabase";
@@ -17,26 +16,10 @@ export default function ProductionManagement() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [showObjectivesModal, setShowObjectivesModal] = useState(false);
   const [filterProdDateFrom, setFilterProdDateFrom] = useState('');
   const [filterProdDateTo, setFilterProdDateTo] = useState('');
   const [filterProdOperator, setFilterProdOperator] = useState('');
   const [filterProdSite, setFilterProdSite] = useState('');
-  const [objectives, setObjectives] = useState({
-    'Minerai': 300,
-    'Forage': 150,
-    '0/4': 200,
-    '0/5': 180,
-    '0/6': 160,
-    '5/15': 140,
-    '8/15': 120,
-    '15/25': 100,
-    '4/6': 90,
-    '10/14': 80,
-    '6/10': 70,
-    '0/31,5': 60,
-  });
-
   // Liste cohérente des dimensions
   const DIMENSIONS_LIST = [
     'Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
@@ -281,14 +264,6 @@ export default function ProductionManagement() {
             onClick={() => setShowAddModal(true)}
           >
             Saisie Production
-          </Button>
-          <Button
-            variant="outline"
-            iconName="Target"
-            iconPosition="left"
-            onClick={() => setShowObjectivesModal(true)}
-          >
-            Objectifs
           </Button>
           <Button
             variant="outline"
@@ -852,71 +827,6 @@ export default function ProductionManagement() {
         </div>
       )}
 
-      {/* Modal Objectifs de Production */}
-      {showObjectivesModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" style={{ background: "var(--color-card)" }}>
-            <h3 className="text-lg font-semibold mb-4 sticky top-0 pb-4 border-b" style={{ color: "var(--color-foreground)", borderColor: "var(--color-border)" }}>
-              Objectifs de Production par Dimension
-            </h3>
-            {/* Minerai et Forage en haut — champs principaux */}
-            <div className="grid grid-cols-2 gap-4 mb-5 p-4 rounded-lg" style={{ background: "var(--color-muted)" }}>
-              {['Minerai', 'Forage'].map(dim => (
-                <div key={dim}>
-                  <label className="block text-sm font-semibold mb-1" style={{ color: "var(--color-foreground)" }}>
-                    {dim} (t/jour)
-                  </label>
-                  <input
-                    type="number"
-                    value={objectives[dim] ?? 0}
-                    onChange={(e) => setObjectives({ ...objectives, [dim]: parseFloat(e.target.value) || 0 })}
-                    className="w-full p-2 rounded border text-base font-bold"
-                    style={{ borderColor: "var(--color-primary)", background: "var(--color-background)", color: "var(--color-foreground)" }}
-                    placeholder="0"
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Autres dimensions */}
-            <p className="text-xs font-medium mb-2" style={{ color: "var(--color-muted-foreground)" }}>AUTRES DIMENSIONS</p>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {DIMENSIONS_LIST.filter(d => d !== 'Minerai' && d !== 'Forage').map(dimension => (
-                <div key={dimension}>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
-                    {dimension} (t/jour)
-                  </label>
-                  <input
-                    type="number"
-                    value={objectives[dimension] ?? 0}
-                    onChange={(e) => setObjectives({ ...objectives, [dimension]: parseFloat(e.target.value) || 0 })}
-                    className="w-full p-2 rounded border"
-                    style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
-                    placeholder="0"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-3 mt-6 justify-end sticky bottom-0 bg-card pt-4 border-t" style={{ backgroundColor: "var(--color-card)", borderColor: "var(--color-border)" }}>
-              <Button
-                variant="outline"
-                onClick={() => setShowObjectivesModal(false)}
-              >
-                Annuler
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => {
-                  toastSuccess("Objectifs sauvegardés");
-                  setShowObjectivesModal(false);
-                }}
-              >
-                Sauvegarder
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </AppLayout>
   );
 }
