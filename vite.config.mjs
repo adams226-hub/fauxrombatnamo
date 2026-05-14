@@ -25,7 +25,7 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api/': {
-        target: 'https://mbpvkayzjrvtcelreffo.supabase.co',
+        target: 'https://yxflncpuevwkvnhlavpy.supabase.co',
         changeOrigin: true,
         secure: false
       }
