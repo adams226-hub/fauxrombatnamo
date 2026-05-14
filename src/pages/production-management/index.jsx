@@ -18,6 +18,10 @@ export default function ProductionManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showObjectivesModal, setShowObjectivesModal] = useState(false);
+  const [filterProdDateFrom, setFilterProdDateFrom] = useState('');
+  const [filterProdDateTo, setFilterProdDateTo] = useState('');
+  const [filterProdOperator, setFilterProdOperator] = useState('');
+  const [filterProdSite, setFilterProdSite] = useState('');
   const [objectives, setObjectives] = useState({
     'Minerai': 300,
     'Forage': 150,
@@ -237,6 +241,14 @@ export default function ProductionManagement() {
     }
   };
 
+  const filteredProductionData = productionData.filter(p => {
+    if (filterProdDateFrom && p.date < filterProdDateFrom) return false;
+    if (filterProdDateTo && p.date > filterProdDateTo) return false;
+    if (filterProdOperator && !p.operator?.toLowerCase().includes(filterProdOperator.toLowerCase())) return false;
+    if (filterProdSite && !p.site?.toLowerCase().includes(filterProdSite.toLowerCase())) return false;
+    return true;
+  });
+
   const totalProduction = productionData.reduce((sum, item) => sum + (parseFloat(item?.total) || 0), 0);
   const totalStock = stockData.reduce((sum, item) => sum + (parseFloat(item?.available) || 0), 0);
 
@@ -404,8 +416,52 @@ export default function ProductionManagement() {
         </div>
       </div>
 
+      {/* Filtres historique productions */}
+      <div className="rounded-xl border mt-6 p-4" style={{ background: "var(--color-card)" }}>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex items-center gap-2">
+            <Icon name="Filter" size={16} color="var(--color-muted-foreground)" />
+            <span className="text-sm font-medium" style={{ color: "var(--color-muted-foreground)" }}>Filtres</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Du</label>
+            <input type="date" value={filterProdDateFrom} onChange={e => setFilterProdDateFrom(e.target.value)}
+              className="p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Au</label>
+            <input type="date" value={filterProdDateTo} onChange={e => setFilterProdDateTo(e.target.value)}
+              className="p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+          </div>
+          <div className="flex flex-col gap-1" style={{ minWidth: '160px' }}>
+            <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Opérateur</label>
+            <input type="text" value={filterProdOperator} onChange={e => setFilterProdOperator(e.target.value)}
+              placeholder="Nom opérateur..."
+              className="p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+          </div>
+          <div className="flex flex-col gap-1" style={{ minWidth: '160px' }}>
+            <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Site</label>
+            <input type="text" value={filterProdSite} onChange={e => setFilterProdSite(e.target.value)}
+              placeholder="Nom du site..."
+              className="p-2 rounded border text-sm"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+          </div>
+          <button onClick={() => { setFilterProdDateFrom(''); setFilterProdDateTo(''); setFilterProdOperator(''); setFilterProdSite(''); }}
+            className="px-3 py-2 rounded border text-sm transition-colors hover:bg-muted"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-muted-foreground)" }}>
+            Réinitialiser
+          </button>
+          <span className="text-xs self-end pb-2" style={{ color: "var(--color-muted-foreground)" }}>
+            {filteredProductionData.length} saisie{filteredProductionData.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      </div>
+
       {/* Historique des productions */}
-      <div className="rounded-xl border mt-6" style={{ background: "var(--color-card)" }}>
+      <div className="rounded-xl border mt-2" style={{ background: "var(--color-card)" }}>
         <div className="p-4 border-b" style={{ borderColor: "var(--color-border)" }}>
           <h2 className="text-lg font-semibold" style={{ color: "var(--color-foreground)" }}>
             Historique des Productions
@@ -423,7 +479,7 @@ export default function ProductionManagement() {
               </tr>
             </thead>
             <tbody>
-              {productionData.map((item) => (
+              {filteredProductionData.map((item) => (
                 <tr key={item.id} className="border-b" style={{ borderColor: "var(--color-border)" }}>
                   <td className="p-4" style={{ color: "var(--color-foreground)" }}>{item.date}</td>
                   <td className="p-4" style={{ color: "var(--color-foreground)" }}>{item.site}</td>

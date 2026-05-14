@@ -30,6 +30,12 @@ export default function EquipmentManagement() {
   const [editEquipment, setEditEquipment] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
+  const [filterEquipStatus, setFilterEquipStatus] = useState('all');
+  const [filterEquipSearch, setFilterEquipSearch] = useState('');
+  const [filterOpDateFrom, setFilterOpDateFrom] = useState('');
+  const [filterOpDateTo, setFilterOpDateTo] = useState('');
+  const [filterOpEquipment, setFilterOpEquipment] = useState('');
+
   // Nouveau: État pour le suivi quotidien des opérations
   const [newOperation, setNewOperation] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -274,6 +280,25 @@ export default function EquipmentManagement() {
     { value: 'autre',     label: 'Autre (préciser)' },
   ];
 
+  const filteredEquipment = equipment.filter(e => {
+    if (filterEquipStatus !== 'all' && e.status !== filterEquipStatus) return false;
+    if (filterEquipSearch) {
+      const s = filterEquipSearch.toLowerCase();
+      if (!e.name?.toLowerCase().includes(s) && !e.type?.toLowerCase().includes(s) && !e.model?.toLowerCase().includes(s) && !e.location?.toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+
+  const filteredOperationLogs = operationLogs.filter(log => {
+    if (filterOpDateFrom && log.date < filterOpDateFrom) return false;
+    if (filterOpDateTo && log.date > filterOpDateTo) return false;
+    if (filterOpEquipment) {
+      const s = filterOpEquipment.toLowerCase();
+      if (!log.equipment?.name?.toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+
   const getMachineTypeLabel = (type) => {
     const found = EQUIPMENT_TYPES.find(t => t.value === type);
     return found ? found.label : (type || '');
@@ -415,6 +440,42 @@ export default function EquipmentManagement() {
             </div>
           </div>
 
+          {/* Filtres équipements */}
+          <div className="rounded-xl border p-4 mb-4" style={{ background: "var(--color-card)" }}>
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="flex items-center gap-2">
+                <Icon name="Filter" size={16} color="var(--color-muted-foreground)" />
+                <span className="text-sm font-medium" style={{ color: "var(--color-muted-foreground)" }}>Filtres</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Statut</label>
+                <select value={filterEquipStatus} onChange={e => setFilterEquipStatus(e.target.value)}
+                  className="p-2 rounded border text-sm"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)", minWidth: '140px' }}>
+                  <option value="all">Tous</option>
+                  <option value="active">Fonctionnel</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="offline">Hors service</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1 flex-1" style={{ minWidth: '200px' }}>
+                <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Recherche (code / type / modèle)</label>
+                <input type="text" value={filterEquipSearch} onChange={e => setFilterEquipSearch(e.target.value)}
+                  placeholder="Rechercher..."
+                  className="p-2 rounded border text-sm"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+              </div>
+              <button onClick={() => { setFilterEquipStatus('all'); setFilterEquipSearch(''); }}
+                className="px-3 py-2 rounded border text-sm transition-colors hover:bg-muted"
+                style={{ borderColor: "var(--color-border)", color: "var(--color-muted-foreground)" }}>
+                Réinitialiser
+              </button>
+              <span className="text-xs self-end pb-2" style={{ color: "var(--color-muted-foreground)" }}>
+                {filteredEquipment.length} équipement{filteredEquipment.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
           {/* Equipment table */}
           <div className="rounded-xl border" style={{ background: "var(--color-card)" }}>
             <div className="p-4 border-b" style={{ borderColor: "var(--color-border)" }}>
@@ -441,14 +502,14 @@ export default function EquipmentManagement() {
                         Chargement...
                       </td>
                     </tr>
-                  ) : equipment.length === 0 ? (
+                  ) : filteredEquipment.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="p-8 text-center" style={{ color: "var(--color-muted-foreground)" }}>
                         Aucun équipement trouvé
                       </td>
                     </tr>
                   ) : (
-                    equipment.map((item) => (
+                    filteredEquipment.map((item) => (
                       <tr key={item.id} className="border-b" style={{ borderColor: "var(--color-border)" }}>
                         <td className="p-4">
                           <div>
@@ -554,6 +615,43 @@ export default function EquipmentManagement() {
             </div>
           </div>
 
+          {/* Filtres suivi quotidien */}
+          <div className="rounded-xl border p-4 mb-4" style={{ background: "var(--color-card)" }}>
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="flex items-center gap-2">
+                <Icon name="Filter" size={16} color="var(--color-muted-foreground)" />
+                <span className="text-sm font-medium" style={{ color: "var(--color-muted-foreground)" }}>Filtres</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Du</label>
+                <input type="date" value={filterOpDateFrom} onChange={e => setFilterOpDateFrom(e.target.value)}
+                  className="p-2 rounded border text-sm"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Au</label>
+                <input type="date" value={filterOpDateTo} onChange={e => setFilterOpDateTo(e.target.value)}
+                  className="p-2 rounded border text-sm"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+              </div>
+              <div className="flex flex-col gap-1 flex-1" style={{ minWidth: '180px' }}>
+                <label className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>Équipement</label>
+                <input type="text" value={filterOpEquipment} onChange={e => setFilterOpEquipment(e.target.value)}
+                  placeholder="Code engin..."
+                  className="p-2 rounded border text-sm"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }} />
+              </div>
+              <button onClick={() => { setFilterOpDateFrom(''); setFilterOpDateTo(''); setFilterOpEquipment(''); }}
+                className="px-3 py-2 rounded border text-sm transition-colors hover:bg-muted"
+                style={{ borderColor: "var(--color-border)", color: "var(--color-muted-foreground)" }}>
+                Réinitialiser
+              </button>
+              <span className="text-xs self-end pb-2" style={{ color: "var(--color-muted-foreground)" }}>
+                {filteredOperationLogs.length} opération{filteredOperationLogs.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
           {/* Tableau des opérations quotidiennes */}
           <div className="rounded-xl border" style={{ background: "var(--color-card)" }}>
             <div className="p-4 border-b" style={{ borderColor: "var(--color-border)" }}>
@@ -579,14 +677,14 @@ export default function EquipmentManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {operationLogs.length === 0 ? (
+                  {filteredOperationLogs.length === 0 ? (
                     <tr>
                       <td colSpan="11" className="p-8 text-center" style={{ color: "var(--color-muted-foreground)" }}>
                         Aucune opération enregistrée
                       </td>
                     </tr>
                   ) : (
-                    operationLogs.map((log) => (
+                    filteredOperationLogs.map((log) => (
                       <tr key={log.id} className="border-b" style={{ borderColor: "var(--color-border)" }}>
                         <td className="p-3 text-sm" style={{ color: "var(--color-foreground)" }}>{log.date}</td>
                         <td className="p-3 text-sm" style={{ color: "var(--color-foreground)" }}>
