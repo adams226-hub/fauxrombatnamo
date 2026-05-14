@@ -130,63 +130,56 @@ export function exportFuelReport(range = 'month', fuelTransactions = []) {
 
 // ── 3. FINANCIER ───────────────────────────────────────────────────────────────
 export function exportFinancialReport(range = 'month', transactions = []) {
-  const defaultIncome = [
-    { date: today(), category: 'Vente Minerai',    description: 'Ventes brutes minerai',    amount: 45000 },
-    { date: today(), category: 'Vente Gravillons', description: 'Ventes gravillons 0/5',    amount: 12500 },
-    { date: today(), category: 'Services',         description: 'Prestations diverses',     amount: 3200  },
-  ];
-  const defaultExpenses = [
-    { date: today(), category: 'Salaires',    description: 'Salaires mensuels personnel', amount: 8500 },
-    { date: today(), category: 'Carburant',   description: 'Consommation carburant',     amount: 2460 },
-    { date: today(), category: 'Maintenance', description: 'Entretiens équipements',     amount: 1800 },
-    { date: today(), category: 'Location',    description: 'Location matériel',          amount: 1200 },
-  ];
-
-  const income   = transactions.length ? transactions.filter(t => t.type === 'income')  : defaultIncome;
-  const expenses = transactions.length ? transactions.filter(t => t.type === 'expense') : defaultExpenses;
+  const income   = transactions.filter(t => t.type === 'income');
+  const expenses = transactions.filter(t => t.type === 'expense');
 
   const totalIncome   = income.reduce((s, t)   => s + (parseFloat(t.amount) || 0), 0);
   const totalExpenses = expenses.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const profit        = totalIncome - totalExpenses;
   const margin        = totalIncome > 0 ? ((profit / totalIncome) * 100).toFixed(1) : 0;
 
-  const synthSheet = makeSheet([
+  const COL_HEADERS = ['Date', 'Catégorie', 'Description', 'Client / Fournisseur', 'Référence', 'Mode Paiement', 'Montant (DA)'];
+  const COL_WIDTHS  = [14, 26, 42, 28, 18, 18, 18];
+
+  const toRow = t => [
+    t.date              || '',
+    t.category          || '',
+    t.description       || '',
+    t.client_supplier   || '',
+    t.reference         || '',
+    t.payment_method    || '',
+    parseFloat(t.amount) || 0,
+  ];
+
+  // Feuille unique avec tout le contenu
+  const fullSheet = makeSheet([
     [COMPANY],
     [PLATFORM],
     ['RAPPORT FINANCIER'],
     [],
     ['Période',            periodLabel(range)],
     ['Date de génération', today()],
+    ['Transactions',       `${transactions.length} au total (${income.length} revenus, ${expenses.length} dépenses)`],
     [],
-    ['SYNTHÈSE FINANCIÈRE', ''],
-    ['Total Revenus',       totalIncome],
-    ['Total Dépenses',      totalExpenses],
-    ['Bénéfice Net',        profit],
-    ['Marge bénéficiaire',  `${margin} %`],
-  ], [35, 25]);
-
-  const incomeSheet = makeSheet([
-    ['REVENUS'],
+    ['── SYNTHÈSE FINANCIÈRE ──────────────────────────'],
+    ['Total Revenus',      '',  '',  '',  '',  '',  totalIncome],
+    ['Total Dépenses',     '',  '',  '',  '',  '',  totalExpenses],
+    ['Bénéfice Net',       '',  '',  '',  '',  '',  profit],
+    ['Marge bénéficiaire', '',  '',  '',  '',  '',  `${margin} %`],
     [],
-    ['Date', 'Catégorie', 'Description', 'Client / Fournisseur', 'Montant (FCFA)'],
-    ...income.map(t => [t.date || '', t.category || '', t.description || '', t.client_supplier || '', parseFloat(t.amount) || 0]),
+    ['── LISTE DES REVENUS (' + income.length + ') ──────────────────────────────────────────────'],
+    COL_HEADERS,
+    ...income.map(toRow),
+    ['', '', '', '', '', 'TOTAL REVENUS', totalIncome],
     [],
-    ['', '', '', 'TOTAL REVENUS', totalIncome],
-  ], [15, 25, 40, 25, 20]);
-
-  const expensesSheet = makeSheet([
-    ['DÉPENSES'],
-    [],
-    ['Date', 'Catégorie', 'Description', 'Fournisseur', 'Montant (FCFA)'],
-    ...expenses.map(t => [t.date || '', t.category || '', t.description || '', t.client_supplier || '', parseFloat(t.amount) || 0]),
-    [],
-    ['', '', '', 'TOTAL DÉPENSES', totalExpenses],
-  ], [15, 25, 40, 25, 20]);
+    ['── LISTE DES DÉPENSES (' + expenses.length + ') ────────────────────────────────────────────'],
+    COL_HEADERS,
+    ...expenses.map(toRow),
+    ['', '', '', '', '', 'TOTAL DÉPENSES', totalExpenses],
+  ], COL_WIDTHS);
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, synthSheet,    'Synthèse');
-  XLSX.utils.book_append_sheet(wb, incomeSheet,   'Revenus');
-  XLSX.utils.book_append_sheet(wb, expensesSheet, 'Dépenses');
+  XLSX.utils.book_append_sheet(wb, fullSheet, 'Rapport Financier');
   downloadXLSX(wb, `AMP_Rapport_Financier_${fileDate()}.xlsx`);
 }
 
