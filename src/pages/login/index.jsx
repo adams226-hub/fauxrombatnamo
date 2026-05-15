@@ -151,33 +151,6 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Comptes de référence */}
-          <div className="mt-6 p-4 rounded-lg" style={{ background: "var(--color-muted)" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--color-foreground)" }}>
-              Comptes disponibles :
-            </h3>
-            <div className="space-y-1 text-xs" style={{ color: "var(--color-muted-foreground)" }}>
-              <div className="flex justify-between gap-4">
-                <span>Admin:</span>
-                <span style={{ color: "var(--color-foreground)" }}>admin1@rombat.com / Admin@2026!</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>Directeur:</span>
-                <span style={{ color: "var(--color-foreground)" }}>directeur@rombat.com / Directeur@2026!</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>Superviseur:</span>
-                <span style={{ color: "var(--color-foreground)" }}>supervisor@rombat.com / Supervisor@2026!</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>Comptable:</span>
-                <span style={{ color: "var(--color-foreground)" }}>comptable@rombat.com / Comptable@2026!</span>
-              </div>
-            </div>
-            <p className="text-xs mt-2" style={{ color: "var(--color-muted-foreground)" }}>
-              Les comptes sont créés via le panneau Administration.
-            </p>
-          </div>
         </div>
 
         <div className="text-center mt-6">
