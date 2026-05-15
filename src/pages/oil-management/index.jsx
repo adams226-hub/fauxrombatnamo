@@ -85,10 +85,15 @@ export default function OilManagement() {
   const totalEntriesL = entries.reduce((s, t) => s + parseFloat(t.quantity || 0), 0);
   const totalExitsL = exits.reduce((s, t) => s + parseFloat(t.quantity || 0), 0);
   const stockEstime = Math.max(0, totalEntriesL - totalExitsL);
-  const totalCost = entries.reduce(
-    (s, t) => s + (parseFloat(t.quantity || 0) * parseFloat(t.cost_per_unit || 0)),
-    0
-  );
+
+  const stockByOilType = transactions.reduce((acc, t) => {
+    const type = t.oil_type;
+    if (!acc[type]) acc[type] = 0;
+    if (t.transaction_type === 'in') acc[type] += parseFloat(t.quantity || 0);
+    else acc[type] -= parseFloat(t.quantity || 0);
+    return acc;
+  }, {});
+  Object.keys(stockByOilType).forEach(k => { stockByOilType[k] = Math.max(0, stockByOilType[k]); });
 
   const handleFieldChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -102,6 +107,16 @@ export default function OilManagement() {
     if (form.oil_type === "Autre" && !form.oil_type_custom.trim()) {
       toast.error("Veuillez préciser le type d'huile");
       return;
+    }
+    if (form.transaction_type === "out") {
+      const resolvedType = form.oil_type === "Autre" && form.oil_type_custom.trim()
+        ? form.oil_type_custom.trim()
+        : form.oil_type;
+      const stockDisponible = stockByOilType[resolvedType] || 0;
+      if (parseFloat(form.quantity) > stockDisponible) {
+        toast.error(`Stock insuffisant pour "${resolvedType}" — disponible : ${stockDisponible.toFixed(1)} L, demandé : ${parseFloat(form.quantity).toFixed(1)} L`);
+        return;
+      }
     }
     const loadingId = hotToast.loading("Enregistrement...", { position: "top-right" });
     try {
@@ -220,7 +235,7 @@ export default function OilManagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="p-4 rounded-xl border" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "rgba(237,137,54,0.14)" }}>
@@ -256,19 +271,6 @@ export default function OilManagement() {
               <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Stock Estimé</p>
               <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
                 {stockEstime.toFixed(1)} L
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="p-4 rounded-xl border" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "rgba(229,62,62,0.12)" }}>
-              <Icon name="Receipt" size={20} color="var(--color-error)" />
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Coût Total Achats</p>
-              <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
-                {totalCost.toLocaleString("fr-FR")} DA
               </p>
             </div>
           </div>

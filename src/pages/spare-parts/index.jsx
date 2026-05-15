@@ -176,11 +176,6 @@ export default function SpareParts() {
     const m = parseFloat(p.minimum_stock) || 0;
     return q > 0 && q <= m;
   }).length;
-  const totalValue = parts.reduce(
-    (sum, p) => sum + (parseFloat(p.unit_price) || 0) * (parseFloat(p.quantity_in_stock) || 0),
-    0
-  );
-
   const filteredParts = parts.filter((p) => {
     const q = filterSearch.toLowerCase();
     const matchesSearch =
@@ -233,7 +228,7 @@ export default function SpareParts() {
           <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">{success}</div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
             className="rounded-xl p-5 border"
             style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}
@@ -281,26 +276,6 @@ export default function SpareParts() {
                   Stock Faible
                 </p>
                 <p className="text-2xl font-bold mt-0.5 text-orange-600">{lowStockCount}</p>
-              </div>
-            </div>
-          </div>
-          <div
-            className="rounded-xl p-5 border"
-            style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-green-50 flex-shrink-0">
-                <Icon name="DollarSign" size={22} color="#22C55E" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)" }}>
-                  Valeur Totale
-                </p>
-                <p className="text-xl font-bold mt-0.5 text-green-600 truncate">
-                  {totalValue > 0
-                    ? totalValue.toLocaleString("fr-FR", { minimumFractionDigits: 0 }) + " DA"
-                    : "—"}
-                </p>
               </div>
             </div>
           </div>

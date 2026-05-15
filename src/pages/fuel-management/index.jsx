@@ -117,6 +117,17 @@ export default function FuelManagement() {
   const totalEntriesL = fuelEntries.reduce((s, e) => s + parseFloat(e.quantity_liters || 0), 0);
   const stockEstime = Math.max(0, totalEntriesL - totalConsumption);
 
+  const stockByFuelType = {};
+  fuelEntries.forEach(e => {
+    const t = e.fuel_type || 'gasoil';
+    stockByFuelType[t] = (stockByFuelType[t] || 0) + parseFloat(e.quantity_liters || 0);
+  });
+  consumption.forEach(c => {
+    const t = c.fuel_type || 'gasoil';
+    stockByFuelType[t] = (stockByFuelType[t] || 0) - parseFloat(c.quantity || 0);
+  });
+  Object.keys(stockByFuelType).forEach(k => { stockByFuelType[k] = Math.max(0, stockByFuelType[k]); });
+
   const consumptionByMachine = consumption.reduce((acc, item) => {
     const machine = item.equipment || "Inconnu";
     acc[machine] = (acc[machine] || 0) + parseFloat(item.quantity || 0);
@@ -147,8 +158,9 @@ export default function FuelManagement() {
       return;
     }
     const qty = parseFloat(newEntry.quantity);
-    if (qty > stockEstime) {
-      toast.error(`Stock insuffisant — stock actuel : ${stockEstime.toFixed(0)} L, quantité demandée : ${qty.toFixed(0)} L`);
+    const fuelTypeStock = stockByFuelType[newEntry.fuel_type] || 0;
+    if (qty > fuelTypeStock) {
+      toast.error(`Stock insuffisant (${newEntry.fuel_type}) — disponible : ${fuelTypeStock.toFixed(0)} L, demandé : ${qty.toFixed(0)} L`);
       return;
     }
     const loadingId = hotToast.loading("Enregistrement...", { position: "top-right" });
