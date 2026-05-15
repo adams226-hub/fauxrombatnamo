@@ -83,21 +83,6 @@ export default function ExecutiveDashboard() {
           progress: availability,
           progressColor: "#F59E0B",
         },
-        {
-          id: 4,
-          title: "Coût par Tonne",
-          value: Number(data.cost_per_ton || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }),
-          unit: "FCFA/t",
-          trend: (data.cost_per_ton || 0) < 9 ? "up" : "down",
-          trendValue: (data.cost_per_ton || 0) < 9 ? "< 9 FCFA/t ✓" : "> 9 FCFA/t",
-          icon: "DollarSign",
-          iconColor: "#22C55E",
-          bgColor: "rgba(34,197,94,0.12)",
-          subtitle: "Objectif: < 9,00 FCFA/t",
-          color: "#22C55E",
-          progress: data.cost_per_ton > 0 ? Math.min(100, (9 / data.cost_per_ton) * 100) : 0,
-          progressColor: "#22C55E",
-        },
       ]);
     } catch (err) {
       console.error('Erreur:', err);
@@ -215,8 +200,7 @@ export default function ExecutiveDashboard() {
             revenue={dashboardData?.total_revenue || 0}
             expenses={dashboardData?.total_expenses || 0}
             netProfit={dashboardData?.net_profit || 0}
-            costPerTon={dashboardData?.cost_per_ton || 0}
-            profitability={dashboardData?.profitability || 0}
+              profitability={dashboardData?.profitability || 0}
           />
         </div>
         <div className="lg:col-span-1">

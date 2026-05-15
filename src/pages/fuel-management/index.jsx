@@ -113,7 +113,6 @@ export default function FuelManagement() {
 
   const totalConsumption = consumption.reduce((s, i) => s + parseFloat(i.quantity || 0), 0);
   const totalCost = consumption.reduce((s, i) => s + parseFloat(i.cost || 0), 0);
-  const avgCostPerL = consumption.length > 0 ? (totalCost / totalConsumption).toFixed(2) : 0;
 
   const totalEntriesL = fuelEntries.reduce((s, e) => s + parseFloat(e.quantity_liters || 0), 0);
   const stockEstime = Math.max(0, totalEntriesL - totalConsumption);
@@ -147,6 +146,11 @@ export default function FuelManagement() {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
+    const qty = parseFloat(newEntry.quantity);
+    if (qty > stockEstime) {
+      toast.error(`Stock insuffisant — stock actuel : ${stockEstime.toFixed(0)} L, quantité demandée : ${qty.toFixed(0)} L`);
+      return;
+    }
     const loadingId = hotToast.loading("Enregistrement...", { position: "top-right" });
     try {
       const { error } = await miningService.addFuelTransaction(newEntry);
@@ -158,6 +162,7 @@ export default function FuelManagement() {
         setShowAddModal(false);
         setNewEntry(emptyConsumption);
         loadFuelData();
+        loadFuelEntries();
       }
     } catch {
       toast.dismiss(loadingId);
@@ -189,6 +194,7 @@ export default function FuelManagement() {
         setShowEntryModal(false);
         setNewFuelEntry(emptyEntry);
         loadFuelEntries();
+        loadFuelData();
       }
     } catch {
       toast.dismiss(loadingId);
@@ -250,7 +256,7 @@ export default function FuelManagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="p-4 rounded-xl border" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "rgba(229,62,62,0.12)" }}>
@@ -273,19 +279,6 @@ export default function FuelManagement() {
               <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Coût Total</p>
               <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
                 {totalCost.toLocaleString("fr-FR")} DA
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="p-4 rounded-xl border" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: "rgba(49,130,206,0.12)" }}>
-              <Icon name="DollarSign" size={20} color="#3182CE" />
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Coût Moyen/L</p>
-              <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
-                {avgCostPerL} DA
               </p>
             </div>
           </div>
