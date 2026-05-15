@@ -13,6 +13,7 @@ import AlertsPanel from "./components/AlertsPanel";
 import FinancialSummary from "./components/FinancialSummary";
 import SiteStatusTable from "./components/SiteStatusTable";
 import ExportPanel from "./components/ExportPanel";
+import OilConsumptionChart from "./components/OilConsumptionChart";
 
 export default function ExecutiveDashboard() {
   const navigate = useNavigate();
@@ -82,6 +83,36 @@ export default function ExecutiveDashboard() {
           color: "#F59E0B",
           progress: availability,
           progressColor: "#F59E0B",
+        },
+        {
+          id: 4,
+          title: "Voyages Alimentés",
+          value: Math.round(data.voyages_aujourd_hui || 0).toString(),
+          unit: "",
+          trend: "stable",
+          trendValue: "Aujourd'hui",
+          icon: "Truck",
+          iconColor: "#3182CE",
+          bgColor: "rgba(49,130,206,0.12)",
+          subtitle: "Nombre de voyages du jour",
+          color: "#3182CE",
+          progress: Math.min(100, (Number(data.voyages_aujourd_hui || 0) / 50) * 100),
+          progressColor: "#3182CE",
+        },
+        {
+          id: 5,
+          title: "Trous Forés",
+          value: Math.round(data.trous_fores_total || 0).toLocaleString('fr-FR'),
+          unit: "",
+          trend: "up",
+          trendValue: "Cumulatif",
+          icon: "Target",
+          iconColor: "#805AD5",
+          bgColor: "rgba(128,90,213,0.12)",
+          subtitle: "Total cumulé des trous forés",
+          color: "#805AD5",
+          progress: Math.min(100, (Number(data.trous_fores_total || 0) / 1000) * 100),
+          progressColor: "#805AD5",
         },
       ]);
     } catch (err) {
@@ -189,8 +220,9 @@ export default function ExecutiveDashboard() {
         </div>
       </div>
       {/* Second row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
         <FuelCostChart data={dashboardData?.fuel_chart_data || []} />
+        <OilConsumptionChart data={dashboardData?.oil_chart_data || []} />
         <ProfitabilityChart data={dashboardData?.monthly_profit_data || []} />
       </div>
       {/* Financial summary + Export */}

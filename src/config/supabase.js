@@ -515,7 +515,7 @@ export const miningService = {
     ]);
 
     const DIMENSIONS = [
-      'Minerai', 'Forage', '0/4', '0/5', '0/6',
+      'Nombre de Voyage Alimenté', 'Nombre de Trous Forés', '0/4', '0/5', '0/6',
       '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
     ];
 
@@ -575,6 +575,9 @@ export const miningService = {
       financialMonthResult,
       financialSixMonthResult,
       sitesResult,
+      voyagesResult,
+      trousResult,
+      oilByEqResult,
     ] = await Promise.all([
       supabase.from('production').select('total, date').gte('date', startOfMonth),
       supabase.from('production').select('total, date').gte('date', weekStartStr).lte('date', today),
@@ -584,6 +587,9 @@ export const miningService = {
       supabase.from('financial_transactions').select('amount, type').gte('transaction_date', startOfMonth),
       supabase.from('financial_transactions').select('amount, type, transaction_date').gte('transaction_date', sixMonthsAgoStr),
       supabase.from('sites').select('id, name, location, is_active').order('name'),
+      supabase.from('production_details').select('quantity, production:production_id(date)').eq('dimension', 'Nombre de Voyage Alimenté'),
+      supabase.from('production_details').select('quantity').eq('dimension', 'Nombre de Trous Forés'),
+      supabase.from('oil_transactions').select('equipment_id, quantity, equipment:equipment_id(name)').eq('transaction_type', 'out').not('equipment_id', 'is', null),
     ]);
 
     const productionsMonth = productionMonthResult.data || [];
@@ -609,12 +615,34 @@ export const miningService = {
     // ── Fuel by equipment (chart) ─────────────────────────────
     const fuelByEqMap = {};
     fuelByEq.forEach(f => {
-      const label = f.equipment?.serial_number || f.equipment?.name?.substring(0, 8) || 'N/A';
+      const label = f.equipment?.name || 'N/A';
       if (!fuelByEqMap[label]) fuelByEqMap[label] = { engin: label, consommation: 0, cout: 0 };
       fuelByEqMap[label].consommation += parseFloat(f.quantity || 0);
       fuelByEqMap[label].cout += parseFloat(f.total_cost || 0);
     });
     const fuelChartData = Object.values(fuelByEqMap).sort((a, b) => b.consommation - a.consommation).slice(0, 6);
+
+    // ── Voyages alimentés aujourd'hui ────────────────────────────
+    const voyagesData = voyagesResult.data || [];
+    const voyages_aujourd_hui = voyagesData
+      .filter(v => v.production?.date === todayStr)
+      .reduce((s, v) => s + parseFloat(v.quantity || 0), 0);
+
+    // ── Trous forés cumulatifs ───────────────────────────────────
+    const trousData = trousResult.data || [];
+    const trous_fores_total = trousData.reduce((s, v) => s + parseFloat(v.quantity || 0), 0);
+
+    // ── Huile par équipement ─────────────────────────────────────
+    const oilByEqData = oilByEqResult.data || [];
+    const oilByEqMap = {};
+    oilByEqData.forEach(o => {
+      const label = o.equipment?.name || 'N/A';
+      if (!oilByEqMap[label]) oilByEqMap[label] = { engin: label, consommation: 0 };
+      oilByEqMap[label].consommation += parseFloat(o.quantity || 0);
+    });
+    const oilChartData = Object.values(oilByEqMap)
+      .sort((a, b) => b.consommation - a.consommation)
+      .slice(0, 8);
 
     // ── Monthly profitability (6 months) ─────────────────────
     const monthMap = {};
@@ -687,6 +715,9 @@ export const miningService = {
         production_month_data: productionMonthData,
         // Tables
         sites: sitesData,
+        voyages_aujourd_hui,
+        trous_fores_total,
+        oil_chart_data: oilChartData,
       },
       error: null
     };

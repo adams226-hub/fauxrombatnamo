@@ -22,7 +22,7 @@ export default function ProductionManagement() {
   const [filterProdSite, setFilterProdSite] = useState('');
   // Liste cohérente des dimensions
   const DIMENSIONS_LIST = [
-    'Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
+    'Nombre de Voyage Alimenté', 'Nombre de Trous Forés', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
   ];
 
   const [newEntry, setNewEntry] = useState({
@@ -562,7 +562,7 @@ export default function ProductionManagement() {
               
               {/* Minerai et Forage — champs principaux au-dessus */}
               <div className="grid grid-cols-2 gap-4 p-3 rounded-lg" style={{ background: "var(--color-muted)" }}>
-                {['Minerai', 'Forage'].map(dimName => {
+                {['Nombre de Voyage Alimenté', 'Nombre de Trous Forés'].map(dimName => {
                   const index = newEntry.dimensions.findIndex(d => d.dimension === dimName);
                   const dim = newEntry.dimensions[index];
                   const stockDim = stockData.find(s => s.dimension === dimName);
@@ -595,7 +595,7 @@ export default function ProductionManagement() {
                   Production par dimension (tonnes)
                 </label>
                 <div className="grid grid-cols-3 gap-4 max-h-64 overflow-y-auto pr-2">
-                  {newEntry.dimensions.filter(dim => dim.dimension !== 'Minerai' && dim.dimension !== 'Forage').map((dim, _) => {
+                  {newEntry.dimensions.filter(dim => dim.dimension !== 'Nombre de Voyage Alimenté' && dim.dimension !== 'Nombre de Trous Forés').map((dim, _) => {
                     const index = newEntry.dimensions.findIndex(d => d.dimension === dim.dimension);
                     const stockDim = stockData.find(s => s.dimension === dim.dimension);
                     const available = stockDim ? stockDim.available : 0;
