@@ -581,6 +581,7 @@ export default function SpareParts() {
                           : "#2563EB";
                       const qtyPrefix =
                         mov.movement_type === "out" ? "−" : mov.movement_type === "in" ? "+" : "±";
+                      const linkedPart = parts.find((p) => p.id === mov.spare_part_id);
                       return (
                         <tr
                           key={mov.id}
@@ -599,14 +600,14 @@ export default function SpareParts() {
                               className="font-medium leading-snug"
                               style={{ color: "var(--color-foreground)" }}
                             >
-                              {mov.spare_part?.name || "—"}
+                              {linkedPart?.name || "—"}
                             </div>
-                            {mov.spare_part?.reference && (
+                            {linkedPart?.reference && (
                               <div
                                 className="text-xs font-mono mt-0.5"
                                 style={{ color: "var(--color-muted-foreground)" }}
                               >
-                                {mov.spare_part.reference}
+                                {linkedPart.reference}
                               </div>
                             )}
                           </td>
