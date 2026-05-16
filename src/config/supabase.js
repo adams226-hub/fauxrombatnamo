@@ -891,9 +891,9 @@ export const miningService = {
   async getSparePartMovements(partId = null) {
     let query = supabase
       .from('spare_parts_movements')
-      .select('*, spare_part:part_id(name, reference)')
+      .select('*, spare_part:spare_part_id(name, reference)')
       .order('movement_date', { ascending: false });
-    if (partId) query = query.eq('part_id', partId);
+    if (partId) query = query.eq('spare_part_id', partId);
     const { data, error } = await query;
     return { data, error };
   },
@@ -903,7 +903,7 @@ export const miningService = {
     const { data, error } = await supabase
       .from('spare_parts_movements')
       .insert([{ ...movement, created_by: user?.id || null }])
-      .select('*, spare_part:part_id(name, reference)')
+      .select('*, spare_part:spare_part_id(name, reference)')
       .single();
     return { data, error };
   },

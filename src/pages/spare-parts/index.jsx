@@ -60,7 +60,7 @@ export default function SpareParts() {
   const [partForm, setPartForm] = useState(emptyPartForm);
 
   const emptyMovementForm = {
-    part_id: "",
+    spare_part_id: "",
     movement_type: "in",
     quantity: "",
     movement_date: new Date().toISOString().split("T")[0],
@@ -147,7 +147,7 @@ export default function SpareParts() {
   };
 
   const handleOpenMovement = (partId = "") => {
-    setMovementForm({ ...emptyMovementForm, part_id: partId });
+    setMovementForm({ ...emptyMovementForm, spare_part_id: partId });
     setError("");
     setShowMovementModal(true);
   };
@@ -900,9 +900,9 @@ export default function SpareParts() {
                     Pièce <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={movementForm.part_id}
+                    value={movementForm.spare_part_id}
                     onChange={(e) =>
-                      setMovementForm({ ...movementForm, part_id: e.target.value })
+                      setMovementForm({ ...movementForm, spare_part_id: e.target.value })
                     }
                     required
                     className={inputClass}
