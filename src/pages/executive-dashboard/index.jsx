@@ -314,7 +314,6 @@ export default function ExecutiveDashboard() {
             { label: "Équipement", icon: "Wrench", path: "/equipment-management", color: "#3182CE" },
             { label: "Carburant", icon: "Fuel", path: "/fuel-management", color: "var(--color-warning)" },
             { label: "Comptabilité", icon: "Calculator", path: "/accounting", color: "#805AD5" },
-            { label: "Rapports", icon: "FileText", path: "/reports", color: "var(--color-accent)" },
             { label: "Administration", icon: "Settings", path: "/administration", color: "var(--color-secondary)" },
           ]?.map((item) => (
             <button
