@@ -578,6 +578,7 @@ export const miningService = {
       voyagesResult,
       trousResult,
       oilByEqResult,
+      consumableResult,
     ] = await Promise.all([
       supabase.from('production').select('total, date').gte('date', startOfMonth),
       supabase.from('production').select('total, date').gte('date', weekStartStr).lte('date', today),
@@ -590,6 +591,7 @@ export const miningService = {
       supabase.from('production_details').select('quantity, production:production_id(date)').eq('dimension', 'Nombre de Voyage Alimenté'),
       supabase.from('production_details').select('quantity').eq('dimension', 'Nombre de Trous Forés'),
       supabase.from('oil_transactions').select('equipment_id, quantity, equipment:equipment_id(name)').eq('transaction_type', 'out').not('equipment_id', 'is', null),
+      supabase.from('consumable_movements').select('category, quantity, unit, movement_type'),
     ]);
 
     const productionsMonth = productionMonthResult.data || [];
@@ -643,6 +645,20 @@ export const miningService = {
     const oilChartData = Object.values(oilByEqMap)
       .sort((a, b) => b.consommation - a.consommation)
       .slice(0, 8);
+
+    // ── Stock consommables par catégorie ─────────────────────────
+    const consumableData = consumableResult.data || [];
+    const consumableStockMap = {};
+    consumableData.forEach(c => {
+      const cat = c.category || 'Autre';
+      if (!consumableStockMap[cat]) consumableStockMap[cat] = { category: cat, stock: 0, unit: c.unit || '' };
+      const qty = parseFloat(c.quantity || 0);
+      consumableStockMap[cat].stock += c.movement_type === 'in' ? qty : -qty;
+    });
+    const consumable_stock_data = Object.values(consumableStockMap)
+      .map(c => ({ ...c, stock: Math.max(0, c.stock) }))
+      .sort((a, b) => a.category.localeCompare(b.category));
+    const total_consumable_stock = consumable_stock_data.reduce((s, c) => s + c.stock, 0);
 
     // ── Monthly profitability (6 months) ─────────────────────
     const monthMap = {};
@@ -718,6 +734,8 @@ export const miningService = {
         voyages_aujourd_hui,
         trous_fores_total,
         oil_chart_data: oilChartData,
+        consumable_stock_data,
+        total_consumable_stock,
       },
       error: null
     };
@@ -903,6 +921,28 @@ export const miningService = {
     const { data, error } = await supabase
       .from('spare_parts_movements')
       .insert([{ ...movement, created_by: user?.id || null }])
+      .select('*')
+      .single();
+    return { data, error };
+  },
+
+  // ============================================================
+  // CONSOMMABLES
+  // ============================================================
+
+  async getConsumableMovements() {
+    const { data, error } = await supabase
+      .from('consumable_movements')
+      .select('*')
+      .order('movement_date', { ascending: false });
+    return { data, error };
+  },
+
+  async addConsumableMovement(movement) {
+    const { data: authData } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('consumable_movements')
+      .insert([{ ...movement, operator_name: movement.operator_name || authData?.user?.email || null }])
       .select('*')
       .single();
     return { data, error };

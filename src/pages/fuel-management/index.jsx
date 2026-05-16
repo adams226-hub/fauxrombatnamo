@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -290,8 +290,7 @@ export default function FuelManagement() {
             <div>
               <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Coût Total</p>
               <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
-                {totalCost.toLocaleString("fr-FR")} DA
-              </p>
+                {totalCost.toLocaleString("fr-FR")} FCFA`n              </p>
             </div>
           </div>
         </div>
@@ -346,7 +345,7 @@ export default function FuelManagement() {
             <table className="w-full">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                  {["Date", "Machine", "Opérateur", "Type", "Quantité (L)", "Coût (DA)", "Site", "Actions"].map((h) => (
+                  {["Date", "Machine", "Opérateur", "Type", "Quantité (L)", "Coût (FCFA)", "Site", "Actions"].map((h) => (
                     <th key={h} className="text-left p-4 text-sm font-medium whitespace-nowrap" style={{ color: "var(--color-muted-foreground)" }}>
                       {h}
                     </th>
@@ -426,7 +425,7 @@ export default function FuelManagement() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                    {["Date", "Type Carburant", "Quantité (L)", "Prix/L (DA)", "Coût Total (DA)", "Fournisseur", "Notes"].map((h) => (
+                    {["Date", "Type Carburant", "Quantité (L)", "Prix/L (FCFA)", "Coût Total (FCFA)", "Fournisseur", "Notes"].map((h) => (
                       <th key={h} className="text-left p-4 text-sm font-medium whitespace-nowrap" style={{ color: "var(--color-muted-foreground)" }}>
                         {h}
                       </th>
@@ -538,7 +537,7 @@ export default function FuelManagement() {
                           axisLine={false}
                           tickLine={false}
                         />
-                        <Tooltip formatter={(value) => [`${value} DA`, "Coût"]} />
+                        <Tooltip formatter={(value) => [`${value} FCFA`, "Coût"]} />
                         <Legend />
                         <Line type="monotone" dataKey="coût" stroke="var(--color-warning)" strokeWidth={2} />
                       </LineChart>
@@ -635,7 +634,7 @@ export default function FuelManagement() {
                 </div>
                 <div>
                   <label className={labelClass} style={{ color: "var(--color-foreground)" }}>
-                    Prix/L (DA) *
+                    Prix/L (FCFA) *
                   </label>
                   <input
                     type="number"
@@ -653,8 +652,7 @@ export default function FuelManagement() {
                 <div className="px-4 py-3 rounded-lg" style={{ background: "rgba(56,161,105,0.10)", border: "1px solid rgba(56,161,105,0.4)" }}>
                   <p className="text-sm font-semibold" style={{ color: "var(--color-success)" }}>
                     Total:{" "}
-                    {(parseFloat(newEntry.quantity) * parseFloat(newEntry.cost_per_liter)).toLocaleString("fr-FR")} DA
-                  </p>
+                    {(parseFloat(newEntry.quantity) * parseFloat(newEntry.cost_per_liter)).toLocaleString("fr-FR")} FCFA`n                  </p>
                 </div>
               )}
               <div>
@@ -771,7 +769,7 @@ export default function FuelManagement() {
                 </div>
                 <div>
                   <label className={labelClass} style={{ color: "var(--color-foreground)" }}>
-                    Prix/L (DA) *
+                    Prix/L (FCFA) *
                   </label>
                   <input
                     type="number"
@@ -789,8 +787,7 @@ export default function FuelManagement() {
                 <div className="px-4 py-3 rounded-lg" style={{ background: "rgba(237,137,54,0.10)", border: "1px solid rgba(237,137,54,0.4)" }}>
                   <p className="text-sm font-semibold" style={{ color: "#DD6B20" }}>
                     Total:{" "}
-                    {(parseFloat(newFuelEntry.quantity_liters) * parseFloat(newFuelEntry.cost_per_liter)).toLocaleString("fr-FR")} DA
-                  </p>
+                    {(parseFloat(newFuelEntry.quantity_liters) * parseFloat(newFuelEntry.cost_per_liter)).toLocaleString("fr-FR")} FCFA`n                  </p>
                 </div>
               )}
               <div>
@@ -834,3 +831,4 @@ export default function FuelManagement() {
     </AppLayout>
   );
 }
+

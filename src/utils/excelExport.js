@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+﻿import * as XLSX from 'xlsx';
 
 const COMPANY  = 'Amp Mines et Carrieres SARL';
 const PLATFORM = 'AMP Mining Platform';
@@ -138,7 +138,7 @@ export function exportFinancialReport(range = 'month', transactions = []) {
   const profit        = totalIncome - totalExpenses;
   const margin        = totalIncome > 0 ? ((profit / totalIncome) * 100).toFixed(1) : 0;
 
-  const COL_HEADERS = ['Date', 'Catégorie', 'Description', 'Client / Fournisseur', 'Référence', 'Mode Paiement', 'Montant (DA)'];
+  const COL_HEADERS = ['Date', 'Catégorie', 'Description', 'Client / Fournisseur', 'Référence', 'Mode Paiement', 'Montant (FCFA)'];
   const COL_WIDTHS  = [14, 26, 42, 28, 18, 18, 18];
 
   const toRow = t => [
@@ -263,7 +263,7 @@ export function exportOilReport(range = 'month', oilTransactions = []) {
     ['SYNTHÈSE', ''],
     ['Total Entrées',      `${totalEntryQty.toFixed(1)} L`],
     ['Total Sorties',      `${totalExitQty.toFixed(1)} L`],
-    ['Coût Total Achats',  `${totalCost.toLocaleString('fr-FR')} DA`],
+    ['Coût Total Achats',  `${totalCost.toLocaleString('fr-FR')} FCFA`],
     [],
     ['STOCK PAR TYPE D\'HUILE', '', '', ''],
     ['Type d\'Huile', 'Entrées (L)', 'Sorties (L)', 'Stock Restant (L)'],
@@ -273,7 +273,7 @@ export function exportOilReport(range = 'month', oilTransactions = []) {
   const entrySheet = makeSheet([
     ['ENTRÉES HUILE (ACHATS / RÉCEPTIONS)'],
     [],
-    ['Date', 'Type d\'Huile', 'Quantité (L)', 'Prix/L (DA)', 'Coût Total (DA)', 'Fournisseur', 'Notes'],
+    ['Date', 'Type d\'Huile', 'Quantité (L)', 'Prix/L (FCFA)', 'Coût Total (FCFA)', 'Fournisseur', 'Notes'],
     ...entries.map(t => [
       t.transaction_date || '',
       t.oil_type || '',
@@ -310,3 +310,4 @@ export function exportOilReport(range = 'month', oilTransactions = []) {
   XLSX.utils.book_append_sheet(wb, exitSheet,  'Sorties');
   downloadXLSX(wb, `AMP_Rapport_Huile_${fileDate()}.xlsx`);
 }
+

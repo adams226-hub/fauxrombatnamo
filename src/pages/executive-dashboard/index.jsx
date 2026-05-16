@@ -114,6 +114,21 @@ export default function ExecutiveDashboard() {
           progress: Math.min(100, (Number(data.trous_fores_total || 0) / 1000) * 100),
           progressColor: "#805AD5",
         },
+        {
+          id: 6,
+          title: "Stock Consommables",
+          value: Number(data.total_consumable_stock || 0).toLocaleString('fr-FR', { maximumFractionDigits: 1 }),
+          unit: "",
+          trend: (data.total_consumable_stock || 0) > 0 ? "up" : "stable",
+          trendValue: `${(data.consumable_stock_data || []).length} catégorie${(data.consumable_stock_data || []).length !== 1 ? 's' : ''}`,
+          icon: "Boxes",
+          iconColor: "#0891B2",
+          bgColor: "rgba(8,145,178,0.12)",
+          subtitle: "Stock total en unités",
+          color: "#0891B2",
+          progress: Math.min(100, (Number(data.total_consumable_stock || 0) / 500) * 100),
+          progressColor: "#0891B2",
+        },
       ]);
     } catch (err) {
       console.error('Erreur:', err);
@@ -243,6 +258,38 @@ export default function ExecutiveDashboard() {
       <div className="mb-6 md:mb-8">
         <SiteStatusTable sites={dashboardData?.sites || []} />
       </div>
+      {/* Consumables stock breakdown */}
+      {(dashboardData?.consumable_stock_data || []).length > 0 && (
+        <div className="rounded-xl border mb-6 md:mb-8" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
+          <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
+            <div className="flex items-center gap-2">
+              <Icon name="Boxes" size={18} color="#0891B2" />
+              <h3 className="text-base font-semibold" style={{ color: "var(--color-foreground)" }}>Stock Consommables</h3>
+            </div>
+            <button
+              onClick={() => navigate("/production-management")}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style={{ color: "#0891B2", background: "rgba(8,145,178,0.1)" }}
+            >
+              Gérer les stocks →
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-0 divide-x divide-y" style={{ borderColor: "var(--color-border)" }}>
+            {(dashboardData.consumable_stock_data).map(item => (
+              <div key={item.category} className="p-4">
+                <p className="text-xs font-medium truncate mb-1" style={{ color: "var(--color-muted-foreground)" }}>{item.category}</p>
+                <p className="text-xl font-bold" style={{ color: item.stock > 0 ? "var(--color-foreground)" : "var(--color-error)" }}>
+                  {item.stock.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}
+                </p>
+                <p className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>{item.unit || 'unité'}</p>
+                <div className="mt-2 h-1 rounded-full" style={{ background: "var(--color-muted)" }}>
+                  <div className="h-1 rounded-full" style={{ width: item.stock > 0 ? '70%' : '0%', background: item.stock > 0 ? '#0891B2' : '#ef4444' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Quick navigation footer */}
       <div
         className="rounded-xl border p-4 md:p-5"

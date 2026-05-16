@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import AppLayout from "components/navigation/AppLayout";
 import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
@@ -300,7 +300,7 @@ export default function OilManagement() {
             <table className="w-full">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                  {["Date", "Type Huile", "Quantité", "Prix/L (DA)", "Coût Total (DA)", "Fournisseur", "Notes", "Actions"].map((h) => (
+                  {["Date", "Type Huile", "Quantité", "Prix/L (FCFA)", "Coût Total (FCFA)", "Fournisseur", "Notes", "Actions"].map((h) => (
                     <th key={h} className="text-left p-4 text-sm font-medium whitespace-nowrap" style={{ color: "var(--color-muted-foreground)" }}>
                       {h}
                     </th>
@@ -592,7 +592,7 @@ export default function OilManagement() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={labelClass} style={{ color: "var(--color-foreground)" }}>
-                        Prix/L (DA)
+                        Prix/L (FCFA)
                       </label>
                       <input
                         type="number"
@@ -623,7 +623,7 @@ export default function OilManagement() {
                     <div className="px-4 py-3 rounded-lg" style={{ background: "rgba(237,137,54,0.10)", border: "1px solid rgba(237,137,54,0.4)" }}>
                       <p className="text-sm font-semibold" style={{ color: "#DD6B20" }}>
                         Coût Total:{" "}
-                        {(parseFloat(form.quantity) * parseFloat(form.cost_per_unit)).toLocaleString("fr-FR")} DA
+                        {(parseFloat(form.quantity) * parseFloat(form.cost_per_unit)).toLocaleString("fr-FR")} FCFA
                       </p>
                     </div>
                   )}
@@ -738,3 +738,4 @@ export default function OilManagement() {
     </AppLayout>
   );
 }
+

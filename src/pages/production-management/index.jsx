@@ -20,6 +20,19 @@ export default function ProductionManagement() {
   const [filterProdDateTo, setFilterProdDateTo] = useState('');
   const [filterProdOperator, setFilterProdOperator] = useState('');
   const [filterProdSite, setFilterProdSite] = useState('');
+  const [activeTab, setActiveTab] = useState('production');
+  const [consumableMovements, setConsumableMovements] = useState([]);
+  const [showConsumableModal, setShowConsumableModal] = useState(false);
+  const emptyConsumableForm = {
+    movement_date: new Date().toISOString().split('T')[0],
+    movement_type: 'in',
+    category: '',
+    quantity: '',
+    unit: 'unité',
+    notes: '',
+    operator_name: '',
+  };
+  const [consumableForm, setConsumableForm] = useState(emptyConsumableForm);
   // Liste cohérente des dimensions
   const DIMENSIONS_LIST = [
     'Nombre de Voyage Alimenté', 'Nombre de Trous Forés', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
@@ -80,10 +93,11 @@ export default function ProductionManagement() {
     try {
       setLoading(true);
 
-      const [productionResult, exitsResult, stockResult] = await Promise.all([
+      const [productionResult, exitsResult, stockResult, consumableResult] = await Promise.all([
         miningService.getProductionData(),
         miningService.getProductionExits(),
-        miningService.getStockSummary()
+        miningService.getStockSummary(),
+        miningService.getConsumableMovements(),
       ]);
 
       if (productionResult.error) throw productionResult.error;
@@ -91,8 +105,8 @@ export default function ProductionManagement() {
 
       setProductionData(normalizeProductionData(productionResult.data || []));
       setExitData(normalizeExitData(exitsResult.data || []));
-      // Stock unifié : production + entrées manuelles - toutes les sorties
       setStockData(stockResult.data || []);
+      setConsumableMovements(consumableResult.data || []);
 
     } catch (err) {
       console.error('Erreur chargement production:', err);
@@ -224,6 +238,33 @@ export default function ProductionManagement() {
     }
   };
 
+  const handleAddConsumableMovement = async () => {
+    if (!consumableForm.category.trim() || !consumableForm.quantity || !consumableForm.movement_date) {
+      toastError('Veuillez remplir : catégorie, quantité et date');
+      return;
+    }
+    const qty = parseFloat(consumableForm.quantity);
+    if (consumableForm.movement_type === 'out') {
+      const currentStock = consumableMovements
+        .filter(m => m.category === consumableForm.category.trim())
+        .reduce((s, m) => s + (m.movement_type === 'in' ? parseFloat(m.quantity) : -parseFloat(m.quantity)), 0);
+      if (qty > Math.max(0, currentStock)) {
+        toastError(`Stock insuffisant pour "${consumableForm.category}" — disponible : ${Math.max(0, currentStock).toFixed(1)}, demandé : ${qty.toFixed(1)}`);
+        return;
+      }
+    }
+    const result = await miningService.addConsumableMovement({
+      ...consumableForm,
+      category: consumableForm.category.trim(),
+      quantity: qty,
+    });
+    if (result.error) { toastError("Erreur lors de l'enregistrement"); return; }
+    toastSuccess('Mouvement consommable enregistré');
+    setConsumableForm(emptyConsumableForm);
+    setShowConsumableModal(false);
+    loadData();
+  };
+
   const filteredProductionData = productionData.filter(p => {
     if (filterProdDateFrom && p.date < filterProdDateFrom) return false;
     if (filterProdDateTo && p.date > filterProdDateTo) return false;
@@ -256,34 +297,50 @@ export default function ProductionManagement() {
             Saisie de production et suivi du stock par dimension
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="default"
-            iconName="Plus"
-            iconPosition="left"
-            onClick={() => setShowAddModal(true)}
-          >
-            Saisie Production
-          </Button>
-          <Button
-            variant="outline"
-            iconName="Package"
-            iconPosition="left"
-            onClick={() => setShowExitModal(true)}
-          >
-            Sortie Stock
-          </Button>
-          <Button
-            variant="outline"
-            iconName="ArrowLeft"
-            iconPosition="left"
-            onClick={() => navigate("/")}
-          >
+        <div className="flex items-center gap-3 flex-wrap">
+          {activeTab === 'production' && (
+            <>
+              <Button variant="default" iconName="Plus" iconPosition="left" onClick={() => setShowAddModal(true)}>
+                Saisie Production
+              </Button>
+              <Button variant="outline" iconName="Package" iconPosition="left" onClick={() => setShowExitModal(true)}>
+                Sortie Stock
+              </Button>
+            </>
+          )}
+          {activeTab === 'consommables' && (
+            <Button variant="default" iconName="Plus" iconPosition="left" onClick={() => setShowConsumableModal(true)}>
+              Nouveau Mouvement
+            </Button>
+          )}
+          <Button variant="outline" iconName="ArrowLeft" iconPosition="left" onClick={() => navigate("/")}>
             Retour
           </Button>
         </div>
       </div>
 
+      {/* Onglets */}
+      <div className="flex border-b mb-6" style={{ borderColor: "var(--color-border)" }}>
+        {[
+          { id: 'production', label: 'Production & Stock', icon: 'Mountain' },
+          { id: 'consommables', label: 'Consommables', icon: 'Boxes' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className="flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors"
+            style={{
+              borderColor: activeTab === tab.id ? 'var(--color-primary)' : 'transparent',
+              color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
+            }}
+          >
+            <Icon name={tab.icon} size={15} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'production' && (<>
       {/* Cartes de synthèse */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="p-4 rounded-xl border" style={{ background: "var(--color-card)" }}>
@@ -477,6 +534,93 @@ export default function ProductionManagement() {
           </table>
         </div>
       </div>
+
+      </>)}
+
+      {/* ── Onglet Consommables ───────────────────────────────── */}
+      {activeTab === 'consommables' && (() => {
+        // Calcul stock par catégorie
+        const stockMap = {};
+        consumableMovements.forEach(m => {
+          const cat = m.category || 'Autre';
+          if (!stockMap[cat]) stockMap[cat] = { category: cat, stock: 0, unit: m.unit || '' };
+          stockMap[cat].stock += m.movement_type === 'in' ? parseFloat(m.quantity) : -parseFloat(m.quantity);
+        });
+        const stockByCat = Object.values(stockMap).map(c => ({ ...c, stock: Math.max(0, c.stock) })).sort((a, b) => a.category.localeCompare(b.category));
+        const categories = [...new Set(consumableMovements.map(m => m.category).filter(Boolean))].sort();
+
+        return (
+          <div className="space-y-6">
+            {/* KPIs stock */}
+            {stockByCat.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {stockByCat.map(item => (
+                  <div key={item.category} className="p-4 rounded-xl border" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: item.stock > 0 ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
+                        <Icon name="Boxes" size={20} color={item.stock > 0 ? "#22c55e" : "#ef4444"} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium truncate" style={{ color: "var(--color-muted-foreground)" }}>{item.category}</p>
+                        <p className="text-xl font-bold" style={{ color: item.stock > 0 ? "var(--color-foreground)" : "var(--color-error)" }}>
+                          {item.stock.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}
+                          <span className="text-sm font-normal ml-1" style={{ color: "var(--color-muted-foreground)" }}>{item.unit}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Historique mouvements */}
+            <div className="rounded-xl border" style={{ background: "var(--color-card)", borderColor: "var(--color-border)" }}>
+              <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
+                <h2 className="text-lg font-semibold" style={{ color: "var(--color-foreground)" }}>Historique des Mouvements</h2>
+                <span className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>{consumableMovements.length} mouvement{consumableMovements.length !== 1 ? 's' : ''}</span>
+              </div>
+              {consumableMovements.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <Icon name="Boxes" size={40} color="var(--color-muted-foreground)" />
+                  <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Aucun mouvement enregistré</p>
+                  <Button variant="outline" onClick={() => setShowConsumableModal(true)}>Enregistrer un mouvement</Button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: "var(--color-muted)", borderBottom: "1px solid var(--color-border)" }}>
+                        {["Date", "Type", "Catégorie", "Quantité", "Unité", "Opérateur", "Notes"].map(h => (
+                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide whitespace-nowrap" style={{ color: "var(--color-muted-foreground)" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {consumableMovements.map((mov, idx) => (
+                        <tr key={mov.id} style={{ borderBottom: idx < consumableMovements.length - 1 ? "1px solid var(--color-border)" : "none" }}>
+                          <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--color-foreground)" }}>{mov.movement_date}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${mov.movement_type === 'in' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}>
+                              {mov.movement_type === 'in' ? 'Entrée' : 'Sortie'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-medium" style={{ color: "var(--color-foreground)" }}>{mov.category}</td>
+                          <td className="px-4 py-3 font-bold" style={{ color: mov.movement_type === 'in' ? '#16a34a' : '#dc2626' }}>
+                            {mov.movement_type === 'in' ? '+' : '−'}{parseFloat(mov.quantity).toLocaleString('fr-FR')}
+                          </td>
+                          <td className="px-4 py-3" style={{ color: "var(--color-muted-foreground)" }}>{mov.unit || '—'}</td>
+                          <td className="px-4 py-3" style={{ color: "var(--color-muted-foreground)" }}>{mov.operator_name || '—'}</td>
+                          <td className="px-4 py-3" style={{ color: "var(--color-muted-foreground)" }}>{mov.notes || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Modal Saisie Production */}
       {showAddModal && (
@@ -826,6 +970,132 @@ export default function ProductionManagement() {
           </div>
         </div>
       )}
+
+      {/* Modal Mouvement Consommable */}
+      {showConsumableModal && (() => {
+        const categories = [...new Set(consumableMovements.map(m => m.category).filter(Boolean))].sort();
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: "var(--color-card)" }}>
+              <h3 className="text-lg font-semibold mb-4 pb-4 border-b" style={{ color: "var(--color-foreground)", borderColor: "var(--color-border)" }}>
+                Nouveau Mouvement Consommable
+              </h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Date *</label>
+                    <input
+                      type="date"
+                      value={consumableForm.movement_date}
+                      onChange={e => setConsumableForm({ ...consumableForm, movement_date: e.target.value })}
+                      className="w-full p-2 rounded border text-sm"
+                      style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Type *</label>
+                    <select
+                      value={consumableForm.movement_type}
+                      onChange={e => setConsumableForm({ ...consumableForm, movement_type: e.target.value })}
+                      className="w-full p-2 rounded border text-sm"
+                      style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                    >
+                      <option value="in">Entrée (approvisionnement)</option>
+                      <option value="out">Sortie (utilisation)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Catégorie *</label>
+                  <input
+                    type="text"
+                    list="consumable-categories"
+                    value={consumableForm.category}
+                    onChange={e => setConsumableForm({ ...consumableForm, category: e.target.value })}
+                    className="w-full p-2 rounded border text-sm"
+                    style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                    placeholder="ex: Explosifs, Lubrifiants, Câbles…"
+                  />
+                  <datalist id="consumable-categories">
+                    {categories.map(cat => <option key={cat} value={cat} />)}
+                  </datalist>
+                  {consumableForm.movement_type === 'out' && consumableForm.category.trim() && (() => {
+                    const currentStock = consumableMovements
+                      .filter(m => m.category === consumableForm.category.trim())
+                      .reduce((s, m) => s + (m.movement_type === 'in' ? parseFloat(m.quantity) : -parseFloat(m.quantity)), 0);
+                    return (
+                      <p className="text-xs mt-1" style={{ color: Math.max(0, currentStock) > 0 ? "var(--color-success)" : "var(--color-error)" }}>
+                        Stock disponible : {Math.max(0, currentStock).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} {consumableForm.unit}
+                      </p>
+                    );
+                  })()}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Quantité *</label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={consumableForm.quantity}
+                      onChange={e => setConsumableForm({ ...consumableForm, quantity: e.target.value })}
+                      className="w-full p-2 rounded border text-sm"
+                      style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Unité</label>
+                    <input
+                      type="text"
+                      value={consumableForm.unit}
+                      onChange={e => setConsumableForm({ ...consumableForm, unit: e.target.value })}
+                      className="w-full p-2 rounded border text-sm"
+                      style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                      placeholder="unité, kg, L, m…"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Opérateur</label>
+                  <input
+                    type="text"
+                    value={consumableForm.operator_name}
+                    onChange={e => setConsumableForm({ ...consumableForm, operator_name: e.target.value })}
+                    className="w-full p-2 rounded border text-sm"
+                    style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                    placeholder="Nom de l'opérateur"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Notes</label>
+                  <textarea
+                    value={consumableForm.notes}
+                    onChange={e => setConsumableForm({ ...consumableForm, notes: e.target.value })}
+                    className="w-full p-2 rounded border text-sm"
+                    style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                    rows="2"
+                    placeholder="Notes optionnelles…"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6 justify-end pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
+                <Button variant="outline" onClick={() => { setShowConsumableModal(false); setConsumableForm(emptyConsumableForm); }}>
+                  Annuler
+                </Button>
+                <Button variant="default" onClick={handleAddConsumableMovement}>
+                  {consumableForm.movement_type === 'in' ? 'Enregistrer l\'Entrée' : 'Enregistrer la Sortie'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </AppLayout>
   );
