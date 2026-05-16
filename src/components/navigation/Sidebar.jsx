@@ -146,7 +146,6 @@ export default function Sidebar({ isCollapsed = false, isOpen = false, onToggleC
           // Mobile: slide in/out
           isOpen ? 'translate-x-0' : '-translate-x-full',
           'lg:translate-x-0',
-          isCollapsed ? '' : '',
         ]?.join(' ')}
         aria-label="Navigation principale"
         role="navigation"
@@ -154,63 +153,45 @@ export default function Sidebar({ isCollapsed = false, isOpen = false, onToggleC
         {/* Logo / Brand */}
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <div 
-              style={{ 
-                width: '52px', 
-                height: '52px', 
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFC947 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
+            {/* AMP Logo */}
+            <div style={{
+              width: isCollapsed ? '36px' : '42px',
+              height: isCollapsed ? '36px' : '42px',
+              borderRadius: '10px',
+              background: '#E55B2D',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              boxShadow: '0 3px 10px rgba(229,91,45,0.45)',
+              position: 'relative',
+              overflow: 'hidden',
+              transition: 'all 250ms ease-out',
+            }}>
+              <svg
+                width="26" height="26" viewBox="0 0 28 28" fill="none"
+                style={{ position: 'absolute', opacity: 0.22 }}
+              >
+                <path d="M14 2C11 2 8 3.8 7.5 7C7 9.8 8 11 7 13.2C6 15.2 5 17 6 19.2C7 21.2 8.5 21.8 8.5 24C8.5 25.8 10 27.2 11.5 27.2C13 27.2 13.5 25.8 14.5 24.6C15.5 23.4 16.5 24 17.5 22.5C18.5 21 18.5 19.5 19 17.5C19.5 15.5 19.5 14 19 12.5C18.5 11 17 9.2 16 7.5C15 5.8 14.5 2 14 2Z" fill="white"/>
+              </svg>
+              <span style={{
                 color: 'white',
-                fontSize: '20px',
-                fontFamily: 'var(--font-heading)',
-                boxShadow: '0 6px 16px rgba(255, 107, 53, 0.4)',
-                border: '3px solid rgba(255, 255, 255, 0.15)',
+                fontSize: isCollapsed ? '11px' : '13px',
+                fontWeight: '900',
+                fontFamily: 'Outfit, sans-serif',
+                letterSpacing: '1.5px',
                 position: 'relative',
-                overflow: 'hidden',
-                transform: 'scale(1.1)'
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                top: '3px',
-                left: '3px',
-                right: '3px',
-                bottom: '3px',
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <span style={{
-                  fontSize: '22px',
-                  fontWeight: '900',
-                  textShadow: '0 3px 6px rgba(0, 0, 0, 0.3)',
-                  letterSpacing: '2px',
-                  lineHeight: '1'
-                }}>
-                  RB
-                </span>
-              </div>
+                zIndex: 1,
+              }}>AMP</span>
             </div>
           </div>
           {!isCollapsed && (
             <div className="sidebar-brand-text flex flex-col min-w-0">
-              <span
-                className="text-white font-heading font-700 text-sm leading-tight truncate"
-                style={{ fontFamily: 'var(--font-heading)', fontWeight: 700 }}
-              >
-                Amp Mines et Carrieres
+              <span style={{ color: 'white', fontWeight: 700, fontSize: '13px', fontFamily: 'var(--font-heading)', lineHeight: '1.3', letterSpacing: '0.01em' }}>
+                African Mining
               </span>
-              <span
-                className="text-white/70 text-xs leading-tight truncate"
-                style={{ fontFamily: 'var(--font-caption)' }}
-              >
-                Exploration & Mines
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontFamily: 'var(--font-caption)', lineHeight: '1.3' }}>
+                Partenair SARL
               </span>
             </div>
           )}

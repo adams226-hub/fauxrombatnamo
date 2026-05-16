@@ -93,52 +93,48 @@ export default function AppLayout({ children, userRole = 'admin', userName = 'Je
       </button>
       {/* Main content */}
       <main
-        className="transition-all duration-[250ms] ease-out min-h-screen"
-        style={{
-          marginLeft: `${sidebarWidth}px`,
-          paddingTop: 0,
-        }}
+        className={`transition-all duration-[250ms] ease-out min-h-screen ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-[240px]'}`}
       >
         {/* Top bar */}
         <header
-          className="sticky top-0 z-[90] flex items-center justify-between px-6 border-b"
+          className="sticky top-0 z-[90] flex items-center justify-between px-4 lg:px-6 border-b"
           style={{
             background: 'var(--color-card)',
             borderColor: 'var(--color-border)',
             height: '64px',
-            boxShadow: 'var(--shadow-sm)',
+            boxShadow: '0 1px 0 rgba(0,0,0,0.06)',
           }}
         >
-          {/* Left: breadcrumb (desktop) / spacer (mobile) */}
-          <div className="flex items-center">
+          {/* Left: hamburger spacer (mobile) + breadcrumb (desktop) */}
+          <div className="flex items-center gap-3">
+            <div className="lg:hidden w-10 flex-shrink-0" />
             <div className="hidden lg:block">
               <NavigationBreadcrumb />
             </div>
-            {/* Mobile spacer for hamburger */}
-            <div className="lg:hidden w-12" />
           </div>
 
           {/* Right: alerts + user info */}
           <div className="flex items-center gap-2">
             <AlertNotificationBadge />
             <div
-              className="hidden sm:flex items-center gap-2 pl-3 border-l"
+              className="flex items-center gap-2 pl-3 border-l"
               style={{ borderColor: 'var(--color-border)' }}
             >
               <div
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold flex-shrink-0"
                 style={{
-                  background: 'rgba(44,85,48,0.12)',
+                  background: 'linear-gradient(135deg, rgba(44,85,48,0.15) 0%, rgba(44,85,48,0.08) 100%)',
                   color: 'var(--color-primary)',
                   fontFamily: 'var(--font-caption)',
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  border: '1.5px solid rgba(44,85,48,0.15)',
                 }}
               >
                 {user?.full_name?.split(' ')?.map(n => n?.[0])?.join('')?.toUpperCase()?.slice(0, 2) || userName?.split(' ')?.map(n => n?.[0])?.join('')?.toUpperCase()?.slice(0, 2)}
               </div>
               <div className="hidden md:block">
                 <p
-                  className="text-xs font-medium leading-tight"
+                  className="text-xs font-semibold leading-tight"
                   style={{ color: 'var(--color-foreground)', fontFamily: 'var(--font-caption)' }}
                 >
                   {user?.full_name || userName}
@@ -152,7 +148,7 @@ export default function AppLayout({ children, userRole = 'admin', userName = 'Je
               </div>
               <button
                 onClick={handleLogout}
-                className="p-1 rounded hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-muted transition-colors flex-shrink-0"
                 title="Déconnexion"
               >
                 <Icon name="LogOut" size={16} color="var(--color-muted-foreground)" />
