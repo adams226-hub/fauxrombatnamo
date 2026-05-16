@@ -490,7 +490,7 @@ export default function SpareParts() {
                               style={{ color: "var(--color-foreground)" }}
                             >
                               {part.unit_price
-                                ? `${parseFloat(part.unit_price).toLocaleString("fr-FR")} DA`
+                                ? `${parseFloat(part.unit_price).toLocaleString("fr-FR")} FCFA`
                                 : "—"}
                             </td>
                             <td className="px-4 py-3.5">
