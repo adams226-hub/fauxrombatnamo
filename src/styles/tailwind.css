@@ -500,3 +500,14 @@
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 }
+
+/* Mobile: prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  /* Modals: full width, reduce inner padding on mobile */
+  .modal-card {
+    padding: 1rem !important;
+  }
+}

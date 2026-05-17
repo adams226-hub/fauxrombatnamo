@@ -35,7 +35,7 @@ export default function ProductionManagement() {
   const [consumableForm, setConsumableForm] = useState(emptyConsumableForm);
   // Liste cohérente des dimensions
   const DIMENSIONS_LIST = [
-    'Nombre de Voyage Alimenté', 'Nombre de Trous Forés', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
+    'Nombre de Voyage Alimenté', 'Nombre de Trous Forés', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '4/6 Enrobé', '10/14', '6/10', '0/31,5'
   ];
 
   const [newEntry, setNewEntry] = useState({
@@ -630,7 +630,7 @@ export default function ProductionManagement() {
               Saisie de Production
             </h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
                     Date *
@@ -666,7 +666,7 @@ export default function ProductionManagement() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
                     Poste
@@ -705,7 +705,7 @@ export default function ProductionManagement() {
               </div>
               
               {/* Minerai et Forage — champs principaux au-dessus */}
-              <div className="grid grid-cols-2 gap-4 p-3 rounded-lg" style={{ background: "var(--color-muted)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 rounded-lg" style={{ background: "var(--color-muted)" }}>
                 {['Nombre de Voyage Alimenté', 'Nombre de Trous Forés'].map(dimName => {
                   const index = newEntry.dimensions.findIndex(d => d.dimension === dimName);
                   const dim = newEntry.dimensions[index];
@@ -738,7 +738,7 @@ export default function ProductionManagement() {
                 <label className="block text-sm font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
                   Production par dimension (tonnes)
                 </label>
-                <div className="grid grid-cols-3 gap-4 max-h-64 overflow-y-auto pr-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-64 overflow-y-auto pr-2">
                   {newEntry.dimensions.filter(dim => dim.dimension !== 'Nombre de Voyage Alimenté' && dim.dimension !== 'Nombre de Trous Forés').map((dim, _) => {
                     const index = newEntry.dimensions.findIndex(d => d.dimension === dim.dimension);
                     const stockDim = stockData.find(s => s.dimension === dim.dimension);
@@ -813,7 +813,7 @@ export default function ProductionManagement() {
               Sortie de Stock
             </h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
                     Date *
@@ -849,7 +849,7 @@ export default function ProductionManagement() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
                     Type de sortie
@@ -893,7 +893,7 @@ export default function ProductionManagement() {
                 <label className="block text-sm font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
                   Quantités par dimension (tonnes)
                 </label>
-                <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
                   {newExit.dimensions.map((dim, index) => {
                     const stockDim = stockData.find(s => s.dimension === dim.dimension);
                     const available = stockDim ? stockDim.available : 0;
@@ -981,7 +981,7 @@ export default function ProductionManagement() {
                 Nouveau Mouvement Consommable
               </h3>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Date *</label>
                     <input
@@ -1032,7 +1032,7 @@ export default function ProductionManagement() {
                   })()}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>Quantité *</label>
                     <input

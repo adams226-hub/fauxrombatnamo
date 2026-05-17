@@ -158,7 +158,7 @@ export default function AppLayout({ children, userRole = 'admin', userName = 'Je
         </header>
 
         {/* Page content */}
-        <div className="p-6 lg:p-8">
+        <div className="p-3 sm:p-5 lg:p-8">
           {/* Mobile breadcrumb */}
           <div className="lg:hidden mb-4">
             <NavigationBreadcrumb />

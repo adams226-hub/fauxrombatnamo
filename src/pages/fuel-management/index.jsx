@@ -290,7 +290,8 @@ export default function FuelManagement() {
             <div>
               <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Coût Total</p>
               <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
-                {totalCost.toLocaleString("fr-FR")} FCFA`n              </p>
+                {totalCost.toLocaleString("fr-FR")} FCFA
+              </p>
             </div>
           </div>
         </div>
@@ -652,7 +653,8 @@ export default function FuelManagement() {
                 <div className="px-4 py-3 rounded-lg" style={{ background: "rgba(56,161,105,0.10)", border: "1px solid rgba(56,161,105,0.4)" }}>
                   <p className="text-sm font-semibold" style={{ color: "var(--color-success)" }}>
                     Total:{" "}
-                    {(parseFloat(newEntry.quantity) * parseFloat(newEntry.cost_per_liter)).toLocaleString("fr-FR")} FCFA`n                  </p>
+                    {(parseFloat(newEntry.quantity) * parseFloat(newEntry.cost_per_liter)).toLocaleString("fr-FR")} FCFA
+                  </p>
                 </div>
               )}
               <div>
@@ -787,7 +789,8 @@ export default function FuelManagement() {
                 <div className="px-4 py-3 rounded-lg" style={{ background: "rgba(237,137,54,0.10)", border: "1px solid rgba(237,137,54,0.4)" }}>
                   <p className="text-sm font-semibold" style={{ color: "#DD6B20" }}>
                     Total:{" "}
-                    {(parseFloat(newFuelEntry.quantity_liters) * parseFloat(newFuelEntry.cost_per_liter)).toLocaleString("fr-FR")} FCFA`n                  </p>
+                    {(parseFloat(newFuelEntry.quantity_liters) * parseFloat(newFuelEntry.cost_per_liter)).toLocaleString("fr-FR")} FCFA
+                  </p>
                 </div>
               )}
               <div>
