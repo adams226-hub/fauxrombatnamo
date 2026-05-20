@@ -475,8 +475,9 @@ INSERT INTO objectives (dimension, site, period_type, value, unit) VALUES
   ('5/15',    'all', 'daily',  140, 'tonne'),
   ('8/15',    'all', 'daily',  120, 'tonne'),
   ('15/25',   'all', 'daily',  100, 'tonne'),
-  ('4/6',     'all', 'daily',   90, 'tonne'),
-  ('10/14',   'all', 'daily',   80, 'tonne'),
+  ('4/6',         'all', 'daily',   90, 'tonne'),
+  ('4/6 ENROBÉ',  'all', 'daily',   75, 'tonne'),
+  ('10/14',       'all', 'daily',   80, 'tonne'),
   ('6/10',    'all', 'daily',   70, 'tonne'),
   ('0/31,5',  'all', 'daily',   60, 'tonne')
 ON CONFLICT (dimension, site, period_type) DO NOTHING;

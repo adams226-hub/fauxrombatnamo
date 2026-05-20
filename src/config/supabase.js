@@ -516,7 +516,7 @@ export const miningService = {
 
     const DIMENSIONS = [
       'Nombre de Voyage Alimenté', 'Nombre de Trous Forés', '0/4', '0/5', '0/6',
-      '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
+      '5/15', '8/15', '15/25', '4/6', '4/6 ENROBÉ', '10/14', '6/10', '0/31,5'
     ];
 
     const allEntries = [

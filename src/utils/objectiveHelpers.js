@@ -2,7 +2,7 @@ import { parseDimensionObjective, parseObjective, formatObjective, calculateProg
 import { supabase } from '../config/supabase.js';
 
 export const DIMENSIONS_LIST = [
-  'Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'
+  'Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '4/6 ENROBÉ', '10/14', '6/10', '0/31,5'
 ];
 
 export const PERIOD_TYPES = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'];

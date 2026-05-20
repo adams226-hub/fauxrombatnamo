@@ -68,7 +68,7 @@ export default function Reports() {
   };
 
   // Dimensions correctes selon la production
-  const DIMENSIONS = ['Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'];
+  const DIMENSIONS = ['Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '4/6 ENROBÉ', '10/14', '6/10', '0/31,5'];
   
   const generateReportContent = (report) => {
     const sep = '='.repeat(50);
@@ -85,6 +85,7 @@ export default function Reports() {
       '8/15': 120,
       '15/25': 100,
       '4/6': 90,
+      '4/6 ENROBÉ': 75,
       '10/14': 80,
       '6/10': 70,
       '0/31,5': 60

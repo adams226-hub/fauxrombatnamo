@@ -31,6 +31,7 @@ export default function StockManagement() {
       { size: '8/15', quantity: '' },
       { size: '15/25', quantity: '' },
       { size: '4/6', quantity: '' },
+      { size: '4/6 ENROBÉ', quantity: '' },
       { size: '10/14', quantity: '' },
       { size: '6/10', quantity: '' },
       { size: '0/31,5', quantity: '' }
@@ -50,6 +51,7 @@ export default function StockManagement() {
       { size: '8/15', quantity: '' },
       { size: '15/25', quantity: '' },
       { size: '4/6', quantity: '' },
+      { size: '4/6 ENROBÉ', quantity: '' },
       { size: '10/14', quantity: '' },
       { size: '6/10', quantity: '' },
       { size: '0/31,5', quantity: '' }
@@ -103,7 +105,7 @@ export default function StockManagement() {
   };
 
   const calculateStock = (entriesData, exitsData) => {
-    const dimensions = ['Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '10/14', '6/10', '0/31,5'];
+    const dimensions = ['Minerai', 'Forage', '0/4', '0/5', '0/6', '5/15', '8/15', '15/25', '4/6', '4/6 ENROBÉ', '10/14', '6/10', '0/31,5'];
     const stockCalculations = [];
 
     dimensions.forEach(dim => {
