@@ -100,8 +100,8 @@ export default function OilManagement() {
   };
 
   const handleAddTransaction = async () => {
-    if (!form.transaction_date || !form.oil_type || !form.quantity) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
+    if (!form.transaction_date || !form.oil_type || !form.quantity || parseFloat(form.quantity) <= 0) {
+      toast.error("Veuillez remplir tous les champs obligatoires (quantité > 0)");
       return;
     }
     if (form.oil_type === "Autre" && !form.oil_type_custom.trim()) {
@@ -577,7 +577,7 @@ export default function OilManagement() {
                 </label>
                 <input
                   type="number"
-                  min="0"
+                  min="0.01"
                   step="0.1"
                   value={form.quantity}
                   onChange={(e) => handleFieldChange("quantity", e.target.value)}
