@@ -6,12 +6,14 @@ import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
 import { miningService } from "../../config/supabase";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import { toastSuccess, toastError } from "../../utils/toast";
 import { exportFinancialReport } from "../../utils/excelExport";
 
 export default function Accounting() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { effectiveSiteId } = useSite();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,12 +43,12 @@ export default function Accounting() {
 
   useEffect(() => {
     loadTransactions();
-  }, []);
+  }, [effectiveSiteId]);
 
   const loadTransactions = async () => {
     try {
       setLoading(true);
-      const { data, error } = await miningService.getFinancialTransactions();
+      const { data, error } = await miningService.getFinancialTransactions(effectiveSiteId);
       if (error) throw error;
       // Normaliser les noms de colonnes (transaction_date → date, payment_status → status)
       const normalized = (data || []).map(t => ({
@@ -141,7 +143,7 @@ export default function Accounting() {
         payment_method: newTransaction.payment_method,
         status: 'paid',
         notes: newTransaction.notes
-      });
+      }, effectiveSiteId);
 
       if (error) throw error;
 

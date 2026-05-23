@@ -15,6 +15,11 @@ const supabaseAdmin = supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })
   : null;
 
+// Helper : applique un filtre site_id si fourni
+function bySite(query, siteId) {
+  return siteId ? query.eq('site_id', siteId) : query;
+}
+
 // ============================================================
 // MINING SERVICE - Toutes les opérations base de données
 // Les contrôles d'accès sont gérés par les RLS Supabase.
@@ -45,23 +50,25 @@ export const miningService = {
 
   // Crée un compte auth Supabase + profil associé
   async createUser(email, password, profile) {
-    const client = supabaseAdmin || supabase;
+    // Nécessite supabaseAdmin (service_role). Si absent → erreur claire.
+    if (!supabaseAdmin) {
+      return { data: null, error: { message: 'Clé service_role manquante dans .env.local (VITE_SUPABASE_SERVICE_ROLE_KEY)' } };
+    }
 
-    // Utiliser l'API Admin pour créer l'utilisateur sans confirmation email
-    const { data: authData, error: authError } = await client.auth.admin.createUser({
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: {
         full_name: profile.full_name,
         role: profile.role,
-        username: profile.username
+        username: profile.username,
       }
     });
 
     if (authError) return { data: null, error: authError };
 
-    // Upsert du profil
+    // Upsert du profil avec site_id
     const { data, error } = await supabase
       .from('profiles')
       .upsert([{
@@ -70,6 +77,7 @@ export const miningService = {
         full_name: profile.full_name,
         role: profile.role,
         department: profile.department || null,
+        site_id: profile.site_id || null,
         is_active: true
       }])
       .select()
@@ -123,20 +131,15 @@ export const miningService = {
   // ÉQUIPEMENTS
   // ============================================================
 
-  async getEquipment() {
-    const { data, error } = await supabase
-      .from('equipment')
-      .select('*')
-      .order('created_at', { ascending: false });
+  async getEquipment(siteId = null) {
+    const q = supabase.from('equipment').select('*').order('created_at', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async createEquipment(equipment) {
-    const { data, error } = await supabase
-      .from('equipment')
-      .insert([equipment])
-      .select()
-      .single();
+  async createEquipment(equipment, siteId = null) {
+    const payload = siteId ? { ...equipment, site_id: siteId } : equipment;
+    const { data, error } = await supabase.from('equipment').insert([payload]).select().single();
     return { data, error };
   },
 
@@ -205,22 +208,17 @@ export const miningService = {
   // PRODUCTION
   // ============================================================
 
-  async getProductionData() {
-    const { data, error } = await supabase
+  async getProductionData(siteId = null) {
+    const q = supabase
       .from('production')
-      .select(`
-        *,
-        production_details (
-          dimension,
-          quantity
-        )
-      `)
+      .select('*, production_details(dimension, quantity)')
       .order('date', { ascending: false })
-      .limit(100);
+      .limit(200);
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addProductionData(production) {
+  async addProductionData(production, siteId = null) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const { data: productionResult, error: productionError } = await supabase
@@ -228,6 +226,7 @@ export const miningService = {
       .insert([{
         date: production.date,
         site: production.site,
+        site_id: siteId || production.site_id || null,
         shift: production.shift,
         operator: production.operator,
         notes: production.notes,
@@ -258,21 +257,16 @@ export const miningService = {
   },
 
   // Sorties de production (livraisons / ventes)
-  async getProductionExits() {
-    const { data, error } = await supabase
+  async getProductionExits(siteId = null) {
+    const q = supabase
       .from('production_exits')
-      .select(`
-        *,
-        production_exit_details (
-          dimension,
-          quantity
-        )
-      `)
+      .select('*, production_exit_details(dimension, quantity)')
       .order('date', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addProductionExit(exit) {
+  async addProductionExit(exit, siteId = null) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const { data: exitResult, error: exitError } = await supabase
@@ -284,6 +278,7 @@ export const miningService = {
         client_name: exit.client_name,
         notes: exit.notes,
         total: exit.total,
+        site_id: siteId || exit.site_id || null,
         created_by: user?.id || null
       }])
       .select()
@@ -313,16 +308,17 @@ export const miningService = {
   // TRANSACTIONS FINANCIÈRES (Comptabilité)
   // ============================================================
 
-  async getFinancialTransactions() {
-    const { data, error } = await supabase
+  async getFinancialTransactions(siteId = null) {
+    const q = supabase
       .from('financial_transactions')
       .select('*')
       .order('transaction_date', { ascending: false })
       .limit(200);
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addFinancialTransaction(transaction) {
+  async addFinancialTransaction(transaction, siteId = null) {
     const { data, error } = await supabase
       .from('financial_transactions')
       .insert([{
@@ -336,6 +332,7 @@ export const miningService = {
         payment_method: transaction.payment_method || null,
         payment_status: transaction.status || 'pending',
         notes: transaction.notes || null,
+        site_id: siteId || transaction.site_id || null,
       }])
       .select()
       .single();
@@ -362,19 +359,17 @@ export const miningService = {
   // CARBURANT
   // ============================================================
 
-  async getFuelTransactions() {
-    const { data, error } = await supabase
+  async getFuelTransactions(siteId = null) {
+    const q = supabase
       .from('fuel_transactions')
-      .select(`
-        *,
-        equipment:equipment_id (name, type)
-      `)
+      .select('*, equipment:equipment_id(name, type)')
       .order('transaction_date', { ascending: false })
-      .limit(100);
+      .limit(200);
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addFuelTransaction(entry) {
+  async addFuelTransaction(entry, siteId = null) {
     const { data, error } = await supabase
       .from('fuel_transactions')
       .insert([{
@@ -386,8 +381,8 @@ export const miningService = {
         supplier: entry.supplier || null,
         notes: entry.notes || null,
         operator_name: entry.operator_name || null,
+        site_id: siteId || entry.site_id || null,
       }])
-
       .select()
       .single();
     return { data, error };
@@ -410,29 +405,25 @@ export const miningService = {
   // GESTION DU STOCK
   // ============================================================
 
-  async getStockEntries() {
-    const { data, error } = await supabase
+  async getStockEntries(siteId = null) {
+    const q = supabase
       .from('stock_entries')
-      .select(`
-        *,
-        stock_entry_details (dimension, quantity)
-      `)
+      .select('*, stock_entry_details(dimension, quantity)')
       .order('entry_date', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async getStockExits() {
-    const { data, error } = await supabase
+  async getStockExits(siteId = null) {
+    const q = supabase
       .from('stock_exits')
-      .select(`
-        *,
-        stock_exit_details (dimension, quantity)
-      `)
+      .select('*, stock_exit_details(dimension, quantity)')
       .order('exit_date', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addStockEntry(entry) {
+  async addStockEntry(entry, siteId = null) {
     const { data: { user } } = await supabase.auth.getUser();
     const { dimensions, ...entryData } = entry;
 
@@ -442,7 +433,8 @@ export const miningService = {
         entry_date: entryData.date || entryData.entry_date,
         source: entryData.source,
         notes: entryData.notes || null,
-        operator_id: user?.id || null
+        operator_id: user?.id || null,
+        site_id: siteId || entryData.site_id || null,
       }])
       .select()
       .single();
@@ -467,7 +459,7 @@ export const miningService = {
     return { data: entryResult, error: null };
   },
 
-  async addStockExit(exit) {
+  async addStockExit(exit, siteId = null) {
     const { data: { user } } = await supabase.auth.getUser();
     const { dimensions, ...exitData } = exit;
 
@@ -479,7 +471,8 @@ export const miningService = {
         exit_type: exitData.exit_type || 'sale',
         client_name: exitData.client_name || null,
         notes: exitData.notes || null,
-        operator_id: user?.id || null
+        operator_id: user?.id || null,
+        site_id: siteId || exitData.site_id || null,
       }])
       .select()
       .single();
@@ -504,14 +497,23 @@ export const miningService = {
     return { data: exitResult, error: null };
   },
 
-  async getStockSummary() {
-    // Entrées = production enregistrée + entrées manuelles de stock
-    // Sorties = sorties depuis la page production + sorties depuis la page stock
+  async getStockSummary(siteId = null) {
+    // Pour filtrer par site sur les détails, on passe par la table parente
+    const prodQ = siteId
+      ? supabase.from('production_details').select('dimension, quantity, production:production_id!inner(site_id)').eq('production.site_id', siteId)
+      : supabase.from('production_details').select('dimension, quantity');
+    const seQ = siteId
+      ? supabase.from('stock_entry_details').select('dimension, quantity, entry:stock_entry_id!inner(site_id)').eq('entry.site_id', siteId)
+      : supabase.from('stock_entry_details').select('dimension, quantity');
+    const peQ = siteId
+      ? supabase.from('production_exit_details').select('dimension, quantity, exit:exit_id!inner(site_id)').eq('exit.site_id', siteId)
+      : supabase.from('production_exit_details').select('dimension, quantity');
+    const sxQ = siteId
+      ? supabase.from('stock_exit_details').select('dimension, quantity, exit:stock_exit_id!inner(site_id)').eq('exit.site_id', siteId)
+      : supabase.from('stock_exit_details').select('dimension, quantity');
+
     const [prodDetailsResult, stockEntriesResult, prodExitsResult, stockExitsResult] = await Promise.all([
-      supabase.from('production_details').select('dimension, quantity'),
-      supabase.from('stock_entry_details').select('dimension, quantity'),
-      supabase.from('production_exit_details').select('dimension, quantity'),
-      supabase.from('stock_exit_details').select('dimension, quantity')
+      prodQ, seQ, peQ, sxQ
     ]);
 
     const DIMENSIONS = [
@@ -550,21 +552,34 @@ export const miningService = {
   // DASHBOARD EXÉCUTIF
   // ============================================================
 
-  async getDashboardStats() {
+  async getDashboardStats(siteId = null) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     const today = now.toISOString().split('T')[0];
 
-    // Start of current week (Monday)
-    const dayOfWeek = now.getDay(); // 0=Sun
+    const dayOfWeek = now.getDay();
     const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() + diffToMon);
     const weekStartStr = weekStart.toISOString().split('T')[0];
 
-    // 6 months ago (for profitability chart)
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
     const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+
+    // Construit chaque requête avec filtre site optionnel
+    const prodMonthQ  = bySite(supabase.from('production').select('total, date').gte('date', startOfMonth), siteId);
+    const prodWeekQ   = bySite(supabase.from('production').select('total, date').gte('date', weekStartStr).lte('date', today), siteId);
+    const equipQ      = bySite(supabase.from('equipment').select('id, status, name, serial_number'), siteId);
+    const fuelMonthQ  = bySite(supabase.from('fuel_transactions').select('quantity, cost_per_liter, total_cost').gte('transaction_date', startOfMonth), siteId);
+    const fuelByEqQ   = bySite(supabase.from('fuel_transactions').select('equipment_id, quantity, total_cost, equipment:equipment_id(name, serial_number)').gte('transaction_date', startOfMonth), siteId);
+    const finMonthQ   = bySite(supabase.from('financial_transactions').select('amount, type').gte('transaction_date', startOfMonth), siteId);
+    const fin6MQ      = bySite(supabase.from('financial_transactions').select('amount, type, transaction_date').gte('transaction_date', sixMonthsAgoStr), siteId);
+    const oilByEqQ    = bySite(supabase.from('oil_transactions').select('equipment_id, quantity, equipment:equipment_id(name)').eq('transaction_type', 'out').not('equipment_id', 'is', null), siteId);
+    const consumQ     = bySite(supabase.from('consumable_movements').select('category, quantity, unit, movement_type'), siteId);
+
+    // Voyages et trous — filtrés via production parent si siteId fourni
+    const voyagesBase = supabase.from('production_details').select('quantity, production:production_id(date, site_id)').eq('dimension', 'Nombre de Voyage Alimenté');
+    const trousBase   = supabase.from('production_details').select('quantity, production:production_id(site_id)').eq('dimension', 'Nombre de Trous Forés');
 
     const [
       productionMonthResult,
@@ -580,18 +595,10 @@ export const miningService = {
       oilByEqResult,
       consumableResult,
     ] = await Promise.all([
-      supabase.from('production').select('total, date').gte('date', startOfMonth),
-      supabase.from('production').select('total, date').gte('date', weekStartStr).lte('date', today),
-      supabase.from('equipment').select('id, status, name, serial_number'),
-      supabase.from('fuel_transactions').select('quantity, cost_per_liter, total_cost').gte('transaction_date', startOfMonth),
-      supabase.from('fuel_transactions').select('equipment_id, quantity, total_cost, equipment:equipment_id(name, serial_number)').gte('transaction_date', startOfMonth),
-      supabase.from('financial_transactions').select('amount, type').gte('transaction_date', startOfMonth),
-      supabase.from('financial_transactions').select('amount, type, transaction_date').gte('transaction_date', sixMonthsAgoStr),
+      prodMonthQ, prodWeekQ, equipQ, fuelMonthQ, fuelByEqQ,
+      finMonthQ, fin6MQ,
       supabase.from('sites').select('id, name, location, is_active').order('name'),
-      supabase.from('production_details').select('quantity, production:production_id(date)').eq('dimension', 'Nombre de Voyage Alimenté'),
-      supabase.from('production_details').select('quantity').eq('dimension', 'Nombre de Trous Forés'),
-      supabase.from('oil_transactions').select('equipment_id, quantity, equipment:equipment_id(name)').eq('transaction_type', 'out').not('equipment_id', 'is', null),
-      supabase.from('consumable_movements').select('category, quantity, unit, movement_type'),
+      voyagesBase, trousBase, oilByEqQ, consumQ,
     ]);
 
     const productionsMonth = productionMonthResult.data || [];
@@ -625,13 +632,17 @@ export const miningService = {
     const fuelChartData = Object.values(fuelByEqMap).sort((a, b) => b.consommation - a.consommation).slice(0, 6);
 
     // ── Voyages alimentés aujourd'hui ────────────────────────────
-    const voyagesData = voyagesResult.data || [];
+    const voyagesData = (voyagesResult.data || []).filter(v =>
+      (!siteId || v.production?.site_id === siteId)
+    );
     const voyages_aujourd_hui = voyagesData
       .filter(v => v.production?.date === todayStr)
       .reduce((s, v) => s + parseFloat(v.quantity || 0), 0);
 
     // ── Trous forés cumulatifs ───────────────────────────────────
-    const trousData = trousResult.data || [];
+    const trousData = (trousResult.data || []).filter(v =>
+      (!siteId || v.production?.site_id === siteId)
+    );
     const trous_fores_total = trousData.reduce((s, v) => s + parseFloat(v.quantity || 0), 0);
 
     // ── Huile par équipement ─────────────────────────────────────
@@ -930,19 +941,21 @@ export const miningService = {
   // CONSOMMABLES
   // ============================================================
 
-  async getConsumableMovements() {
-    const { data, error } = await supabase
-      .from('consumable_movements')
-      .select('*')
-      .order('movement_date', { ascending: false });
+  async getConsumableMovements(siteId = null) {
+    const q = supabase.from('consumable_movements').select('*').order('movement_date', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addConsumableMovement(movement) {
+  async addConsumableMovement(movement, siteId = null) {
     const { data: authData } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from('consumable_movements')
-      .insert([{ ...movement, operator_name: movement.operator_name || authData?.user?.email || null }])
+      .insert([{
+        ...movement,
+        site_id: siteId || movement.site_id || null,
+        operator_name: movement.operator_name || authData?.user?.email || null,
+      }])
       .select('*')
       .single();
     return { data, error };
@@ -952,19 +965,20 @@ export const miningService = {
   // GESTION HUILE
   // ============================================================
 
-  async getOilTransactions() {
-    const { data, error } = await supabase
+  async getOilTransactions(siteId = null) {
+    const q = supabase
       .from('oil_transactions')
       .select('*, equipment:equipment_id(name, type, serial_number)')
       .order('transaction_date', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
     return { data, error };
   },
 
-  async addOilTransaction(transaction) {
+  async addOilTransaction(transaction, siteId = null) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from('oil_transactions')
-      .insert([{ ...transaction, created_by: user?.id || null }])
+      .insert([{ ...transaction, site_id: siteId || transaction.site_id || null, created_by: user?.id || null }])
       .select('*, equipment:equipment_id(name, type, serial_number)')
       .single();
     return { data, error };
@@ -975,10 +989,9 @@ export const miningService = {
     return { error };
   },
 
-  async getOilStockSummary() {
-    const { data, error } = await supabase
-      .from('oil_transactions')
-      .select('oil_type, transaction_type, quantity');
+  async getOilStockSummary(siteId = null) {
+    const q = supabase.from('oil_transactions').select('oil_type, transaction_type, quantity');
+    const { data, error } = await bySite(q, siteId);
     if (error) return { data: null, error };
     const OIL_TYPES = ['Huile Moteur', 'Huile Hydraulique', 'Huile Transmission', 'Huile Différentiel', 'Graisse', 'Autre'];
     const summary = OIL_TYPES.map(type => {
@@ -1006,6 +1019,141 @@ export const miningService = {
       .insert([{ ...entry, created_by: user?.id || null }])
       .select()
       .single();
+    return { data, error };
+  },
+
+  // ============================================================
+  // PROJETS (CHANTIERS)
+  // ============================================================
+
+  async getProjects(siteId = null) {
+    const q = supabase.from('projects').select('*').order('created_at', { ascending: false });
+    const { data, error } = await bySite(q, siteId);
+    return { data, error };
+  },
+
+  async createProject(project) {
+    const { data: authData } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{ ...project, created_by: authData?.user?.id || null }])
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async updateProject(id, updates) {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  // ============================================================
+  // FICHES DE COMMANDE
+  // ============================================================
+
+  async getProjectOrders(filters = {}) {
+    let q = supabase
+      .from('project_orders')
+      .select(`
+        *,
+        project:project_id(id, name, code, client),
+        items:project_order_items(*),
+        creator:created_by(id, full_name, email),
+        approver:approved_by(id, full_name, email)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (filters.siteId) q = q.eq('site_id', filters.siteId);
+    if (filters.status) q = q.eq('status', filters.status);
+    if (filters.projectId) q = q.eq('project_id', filters.projectId);
+    if (filters.dateFrom) q = q.gte('created_at', filters.dateFrom);
+    if (filters.dateTo) q = q.lte('created_at', filters.dateTo + 'T23:59:59');
+
+    const { data, error } = await q;
+    return { data, error };
+  },
+
+  async createProjectOrder(order, items) {
+    const { data: authData } = await supabase.auth.getUser();
+    const { data: orderData, error: orderError } = await supabase
+      .from('project_orders')
+      .insert([{ ...order, created_by: authData?.user?.id || null }])
+      .select()
+      .single();
+    if (orderError) return { data: null, error: orderError };
+
+    if (items && items.length > 0) {
+      const { error: itemsError } = await supabase
+        .from('project_order_items')
+        .insert(items.map(it => ({ ...it, order_id: orderData.id })));
+      if (itemsError) return { data: orderData, error: itemsError };
+    }
+    return { data: orderData, error: null };
+  },
+
+  async approveProjectOrder(id, approved) {
+    const { data: authData } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('project_orders')
+      .update({
+        status: approved ? 'approved' : 'rejected',
+        approved_by: authData?.user?.id || null,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async rejectProjectOrder(id, reason) {
+    const { data: authData } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('project_orders')
+      .update({
+        status: 'rejected',
+        rejection_reason: reason || null,
+        approved_by: authData?.user?.id || null,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async markOrderDelivered(id) {
+    const { data, error } = await supabase
+      .from('project_orders')
+      .update({ status: 'delivered' })
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async getOrdersReport(filters = {}) {
+    let q = supabase
+      .from('project_orders')
+      .select(`
+        *,
+        project:project_id(id, name, code, client),
+        items:project_order_items(*)
+      `)
+      .in('status', ['approved', 'delivered'])
+      .order('created_at', { ascending: false });
+
+    if (filters.siteId) q = q.eq('site_id', filters.siteId);
+    if (filters.projectId) q = q.eq('project_id', filters.projectId);
+    if (filters.dateFrom) q = q.gte('approved_at', filters.dateFrom);
+    if (filters.dateTo) q = q.lte('approved_at', filters.dateTo + 'T23:59:59');
+
+    const { data, error } = await q;
     return { data, error };
   },
 };

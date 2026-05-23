@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import { miningService } from "../../config/supabase";
 import AppLayout from "components/navigation/AppLayout";
 import Icon from "components/AppIcon";
@@ -18,20 +19,22 @@ import OilConsumptionChart from "./components/OilConsumptionChart";
 export default function ExecutiveDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { effectiveSiteId, currentSite, isGlobalView, siteLabel } = useSite();
   const [kpiData, setKpiData] = useState([]);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
 
+  // Recharge automatiquement quand la carrière sélectionnée change
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [effectiveSiteId]);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await miningService.getDashboardStats();
+      const { data, error } = await miningService.getDashboardStats(effectiveSiteId);
       if (error) { console.error('Erreur dashboard:', error); return; }
       if (!data) return;
 
@@ -152,14 +155,30 @@ export default function ExecutiveDashboard() {
     <AppLayout userRole={user?.role} userName={user?.full_name} userSite={user?.department || 'Amp Mines et Carrieres'}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--color-foreground)" }}>
-            Tableau de Bord Direction
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold" style={{ color: "var(--color-foreground)" }}>
+              Tableau de Bord Direction
+            </h1>
+            {/* Badge site actif */}
+            {!isGlobalView && currentSite ? (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+                style={{ background: currentSite.bgColor, color: currentSite.color, border: `1.5px solid ${currentSite.color}50` }}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ background: currentSite.color }} />
+                {currentSite.name}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-muted text-muted-foreground border border-border">
+                🌐 Vue Globale
+              </span>
+            )}
+          </div>
           <p
             className="text-sm mt-1"
             style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-caption)" }}
           >
-            Vue exécutive en temps réel — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
+            {siteLabel} — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">

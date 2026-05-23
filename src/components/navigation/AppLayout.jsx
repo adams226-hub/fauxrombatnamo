@@ -8,6 +8,7 @@ import AlertNotificationBadge from './AlertNotificationBadge';
 import QuickActionPanel from './QuickActionPanel';
 import Icon from 'components/AppIcon';
 import { useAuth } from '../../context/AuthContext';
+import SiteSwitcher from '../SiteSwitcher';
 
 export default function AppLayout({ children, userRole = 'admin', userName = 'Jean Dupont', userSite = 'Site Kamoto' }) {
   const navigate = useNavigate();
@@ -112,6 +113,9 @@ export default function AppLayout({ children, userRole = 'admin', userName = 'Je
               <NavigationBreadcrumb />
             </div>
           </div>
+
+          {/* Centre: sélecteur de carrière */}
+          <SiteSwitcher variant="header" />
 
           {/* Right: alerts + user info */}
           <div className="flex items-center gap-2">

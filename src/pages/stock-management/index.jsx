@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import AppLayout from "components/navigation/AppLayout";
 import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
@@ -10,6 +11,7 @@ import { miningService } from "../../config/supabase.js";
 export default function StockManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { effectiveSiteId } = useSite();
   const [stockData, setStockData] = useState([]);
   const [entries, setEntries] = useState([]);
   const [exits, setExits] = useState([]);
@@ -60,15 +62,14 @@ export default function StockManagement() {
 
   useEffect(() => {
     loadStockData();
-  }, []);
+  }, [effectiveSiteId]);
 
   const loadStockData = async () => {
     try {
-      // Récupérer les données depuis l'API
       const [entriesResult, exitsResult, stockSummaryResult] = await Promise.all([
-        miningService.getStockEntries(),
-        miningService.getStockExits(),
-        miningService.getStockSummary()
+        miningService.getStockEntries(effectiveSiteId),
+        miningService.getStockExits(effectiveSiteId),
+        miningService.getStockSummary(effectiveSiteId)
       ]);
 
       if (entriesResult.error) throw entriesResult.error;
@@ -152,7 +153,7 @@ export default function StockManagement() {
       };
 
       // Sauvegarder via l'API
-      const result = await miningService.addStockEntry(entryData);
+      const result = await miningService.addStockEntry(entryData, effectiveSiteId);
       if (result.error) throw result.error;
 
       // Recharger les données
@@ -220,7 +221,7 @@ export default function StockManagement() {
       };
 
       // Sauvegarder via l'API
-      const result = await miningService.addStockExit(exitData);
+      const result = await miningService.addStockExit(exitData, effectiveSiteId);
       if (result.error) throw result.error;
 
       // Recharger les données

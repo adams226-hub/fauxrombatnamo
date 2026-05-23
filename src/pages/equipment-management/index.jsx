@@ -4,6 +4,7 @@ import AppLayout from "components/navigation/AppLayout";
 import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import { miningService } from "../../config/supabase";
 import { toastError, toastSuccess } from "../../utils/toast";
 
@@ -12,6 +13,7 @@ export default function EquipmentManagement() {
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { effectiveSiteId } = useSite();
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [newEquipment, setNewEquipment] = useState({
@@ -32,13 +34,13 @@ export default function EquipmentManagement() {
 
   useEffect(() => {
     fetchEquipmentData();
-  }, []);
+  }, [effectiveSiteId]);
 
   const fetchEquipmentData = async () => {
     setLoading(true);
     try {
       // appeler le service back-end en passant le rôle de l'utilisateur
-      const { data, error } = await miningService.getEquipment(user?.role);
+      const { data, error } = await miningService.getEquipment(effectiveSiteId);
       if (error) throw error;
       if (data) {
         // Filtrer les équipements retraités (soft-deleted)
@@ -74,7 +76,7 @@ export default function EquipmentManagement() {
         purchase_date: new Date().toISOString().split('T')[0],
         location: newEquipment.location || null,
       };
-      const { error } = await miningService.createEquipment(equipmentToAdd);
+      const { error } = await miningService.createEquipment(equipmentToAdd, effectiveSiteId);
       if (error) throw error;
       await fetchEquipmentData();
       setShowAddModal(false);

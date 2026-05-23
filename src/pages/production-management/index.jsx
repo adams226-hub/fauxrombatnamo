@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toastError, toastSuccess } from "../../utils/toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import { miningService } from "../../config/supabase";
 import AppLayout from "../../components/navigation/AppLayout";
 import Icon from "../../components/AppIcon";
@@ -10,6 +11,7 @@ import Button from "../../components/ui/Button";
 export default function ProductionManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { effectiveSiteId } = useSite();
   const [productionData, setProductionData] = useState([]);
   const [exitData, setExitData] = useState([]); // Nouveau: suivi des sorties
   const [stockData, setStockData] = useState([]);
@@ -58,7 +60,7 @@ export default function ProductionManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [effectiveSiteId]);
 
   const computeProductionTotal = (entry) => {
     if (entry?.total && !isNaN(parseFloat(entry.total))) {
@@ -94,10 +96,10 @@ export default function ProductionManagement() {
       setLoading(true);
 
       const [productionResult, exitsResult, stockResult, consumableResult] = await Promise.all([
-        miningService.getProductionData(),
-        miningService.getProductionExits(),
-        miningService.getStockSummary(),
-        miningService.getConsumableMovements(),
+        miningService.getProductionData(effectiveSiteId),
+        miningService.getProductionExits(effectiveSiteId),
+        miningService.getStockSummary(effectiveSiteId),
+        miningService.getConsumableMovements(effectiveSiteId),
       ]);
 
       if (productionResult.error) throw productionResult.error;
@@ -148,7 +150,7 @@ export default function ProductionManagement() {
         notes: newEntry.notes
       };
 
-      const result = await miningService.addProductionData(entryToSave);
+      const result = await miningService.addProductionData(entryToSave, effectiveSiteId);
       if (result.error) throw result.error;
 
       toastSuccess(`Production enregistrée: ${total} tonnes`);
@@ -215,7 +217,7 @@ export default function ProductionManagement() {
         total: total
       };
 
-      const result = await miningService.addProductionExit(exitToSave);
+      const result = await miningService.addProductionExit(exitToSave, effectiveSiteId);
       if (result.error) throw result.error;
 
       toastSuccess(`Sortie enregistrée: ${total} tonnes`);
@@ -257,7 +259,7 @@ export default function ProductionManagement() {
       ...consumableForm,
       category: consumableForm.category.trim(),
       quantity: qty,
-    });
+    }, effectiveSiteId);
     if (result.error) { toastError("Erreur lors de l'enregistrement"); return; }
     toastSuccess('Mouvement consommable enregistré');
     setConsumableForm(emptyConsumableForm);

@@ -3,6 +3,7 @@ import AppLayout from "components/navigation/AppLayout";
 import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import { miningService } from "../../config/supabase";
 import { exportOilReport } from "../../utils/excelExport";
 import toast from "../../utils/toast";
@@ -30,6 +31,7 @@ const inputClass = "w-full px-4 py-3 text-sm rounded-lg border transition-colors
 
 export default function OilManagement() {
   const { user } = useAuth();
+  const { effectiveSiteId } = useSite();
 
   const [transactions, setTransactions] = useState([]);
   const [stockSummary, setStockSummary] = useState([]);
@@ -60,9 +62,9 @@ export default function OilManagement() {
     setLoading(true);
     try {
       const [txRes, stockRes, eqRes] = await Promise.all([
-        miningService.getOilTransactions(),
-        miningService.getOilStockSummary(),
-        miningService.getEquipment(),
+        miningService.getOilTransactions(effectiveSiteId),
+        miningService.getOilStockSummary(effectiveSiteId),
+        miningService.getEquipment(effectiveSiteId),
       ]);
       if (txRes.error) toast.error(`Erreur: ${txRes.error.message}`);
       else setTransactions(txRes.data || []);
@@ -77,7 +79,7 @@ export default function OilManagement() {
 
   useEffect(() => {
     loadAll();
-  }, []);
+  }, [effectiveSiteId]);
 
   const entries = transactions.filter((t) => t.transaction_type === "in");
   const exits = transactions.filter((t) => t.transaction_type === "out");
@@ -144,7 +146,7 @@ export default function OilManagement() {
         payload.cost_per_unit = null;
         payload.supplier = null;
       }
-      const { error } = await miningService.addOilTransaction(payload);
+      const { error } = await miningService.addOilTransaction(payload, effectiveSiteId);
       toast.dismiss(loadingId);
       if (error) {
         toast.error(`Erreur: ${error.message}`);

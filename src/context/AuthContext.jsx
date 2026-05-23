@@ -5,13 +5,14 @@ const AuthContext = createContext(null);
 
 // Permissions par rôle : quelles routes chaque rôle peut accéder
 const ROLE_PERMISSIONS = {
-  admin:        ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/administration', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
-  directeur:    ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
-  chef_de_site: ['/', '/equipment-management', '/oil-management', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
+  admin:        ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/administration', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts', '/project-orders'],
+  directeur:    ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts', '/project-orders'],
+  chef_de_site: ['/', '/equipment-management', '/oil-management', '/data-explorer', '/maintenance-prevention', '/spare-parts', '/project-orders'],
   comptable:    ['/', '/accounting', '/data-explorer'],
   equipement:   ['/', '/equipment-management', '/oil-management', '/accounting', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
-  supervisor:   ['/', '/production-management', '/stock-management', '/data-explorer'],
-  operator:     ['/', '/production-management', '/stock-management']
+  supervisor:   ['/', '/production-management', '/stock-management', '/data-explorer', '/project-orders'],
+  operator:     ['/', '/production-management', '/stock-management', '/project-orders'],
+  secretaire:   ['/', '/project-orders'],
 };
 
 export function AuthProvider({ children }) {
@@ -58,6 +59,7 @@ export function AuthProvider({ children }) {
         full_name: profile?.full_name || authUser.email,
         role: profile?.role || 'operator',
         department: profile?.department || null,
+        site_id: profile?.site_id || null,
         is_active: profile?.is_active ?? true
       });
     } catch (err) {

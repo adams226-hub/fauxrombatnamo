@@ -3,6 +3,7 @@ import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-ro
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SiteProvider } from './context/SiteContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import Login from "./pages/login";
@@ -21,6 +22,7 @@ import Administration from "./pages/administration";
 import AdminComplete from "./pages/administration/admin-complete";
 import AdminWorking from "./pages/administration/admin-working";
 import StockManagement from "./pages/stock-management";
+import ProjectOrders from "./pages/project-orders";
 
 // Composant pour la redirection automatique basée sur le rôle
 function RoleBasedRedirect() {
@@ -184,10 +186,15 @@ const AppRoutes = () => {
       <Route path="/stock-management" element={
         <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'supervisor', 'operator']}>
           <StockManagement />
-
         </ProtectedRouteWrapper>
       } />
-      
+
+      <Route path="/project-orders" element={
+        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'chef_de_site', 'supervisor', 'operator', 'secretaire']}>
+          <ProjectOrders />
+        </ProtectedRouteWrapper>
+      } />
+
       {/* Route 404 */}
       <Route path="*" element={<NotFound />} />
     </RouterRoutes>
@@ -200,7 +207,9 @@ const Routes = () => {
       <ErrorBoundary>
         <ScrollToTop />
         <AuthProvider>
-          <AppRoutes />
+          <SiteProvider>
+            <AppRoutes />
+          </SiteProvider>
         </AuthProvider>
       </ErrorBoundary>
     </BrowserRouter>

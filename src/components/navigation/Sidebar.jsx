@@ -68,6 +68,14 @@ const NAV_ITEMS = [
     badge: null,
   },
   {
+    id: 'project-orders',
+    label: 'Commandes Projets',
+    icon: 'ClipboardList',
+    path: '/project-orders',
+    roles: ['admin', 'directeur', 'chef_de_site', 'supervisor', 'operator', 'secretaire'],
+    badge: null,
+  },
+  {
     id: 'administration',
     label: 'Administration',
     icon: 'Settings',

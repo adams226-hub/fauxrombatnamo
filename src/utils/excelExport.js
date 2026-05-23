@@ -3,6 +3,22 @@
 const COMPANY  = 'Amp Mines et Carrieres SARL';
 const PLATFORM = 'AMP Mining Platform';
 
+// ── Helpers multi-sites ────────────────────────────────────────────────────────
+export const SITE_OPTIONS = [
+  { value: null,                                       label: 'Toutes les carrières', code: 'GLOBAL' },
+  { value: '11111111-1111-1111-1111-111111111111',     label: 'Didri (C1)',            code: 'C1'     },
+  { value: '22222222-2222-2222-2222-222222222222',     label: 'Koro (C2)',             code: 'C2'     },
+];
+
+function siteLabel(siteId) {
+  return SITE_OPTIONS.find(o => o.value === siteId)?.label ?? 'Toutes les carrières';
+}
+
+function filterBySite(rows, siteId) {
+  if (!siteId) return rows;
+  return rows.filter(r => r.site_id === siteId);
+}
+
 const PERIOD_LABELS = {
   day:     "Aujourd'hui",
   week:    'Cette semaine',
@@ -43,9 +59,18 @@ function downloadXLSX(wb, filename) {
 }
 
 // ── 1. PRODUCTION ──────────────────────────────────────────────────────────────
-export function exportProductionReport(range = 'month') {
+export function exportProductionReport(range = 'month', siteId = null, rows = []) {
   const DIMS = ['Minerai','Forage','0/4','0/5','0/6','5/15','8/15','15/25','4/6','10/14','6/10','0/31,5'];
-  const QTY  = [300, 150, 200, 180, 160, 140, 120, 100, 90, 80, 70, 60];
+  const filtered = filterBySite(rows, siteId);
+
+  // Calcul des totaux réels si on a des données, sinon démo
+  const QTY = DIMS.map(dim => {
+    const total = filtered.reduce((sum, r) => {
+      const d = (r.production_details || r.dimensions || []).find(pd => pd.dimension === dim);
+      return sum + parseFloat(d?.quantity || 0);
+    }, 0);
+    return total || 0;
+  });
   const total = QTY.reduce((a, b) => a + b, 0);
 
   const infoSheet = makeSheet([
@@ -53,10 +78,10 @@ export function exportProductionReport(range = 'month') {
     [PLATFORM],
     ['RAPPORT DE PRODUCTION'],
     [],
+    ['Carrière / Site',      siteLabel(siteId)],
     ['Période',              periodLabel(range)],
     ['Date de génération',   today()],
-    ['Jours opérationnels',  '22 / 23'],
-    ['Taux de rendement',    '95.7 %'],
+    ['Nombre d\'entrées',    filtered.length],
   ], [35, 25]);
 
   const prodSheet = makeSheet([
@@ -81,24 +106,18 @@ export function exportProductionReport(range = 'month') {
 }
 
 // ── 2. CARBURANT ───────────────────────────────────────────────────────────────
-export function exportFuelReport(range = 'month', fuelTransactions = []) {
-  const defaultData = [
-    { date: '2026-03-01', equipment: 'Excavateur CAT 349', quantity: 450, unit_cost: 1.20, total_cost: 540  },
-    { date: '2026-03-02', equipment: 'Foreuse DM45',        quantity: 380, unit_cost: 1.20, total_cost: 456  },
-    { date: '2026-03-03', equipment: 'Camion 770G',          quantity: 520, unit_cost: 1.20, total_cost: 624  },
-    { date: '2026-03-04', equipment: 'Concasseur C120',      quantity: 290, unit_cost: 1.20, total_cost: 348  },
-    { date: '2026-03-05', equipment: 'Convoyeur CV-01',      quantity: 410, unit_cost: 1.20, total_cost: 492  },
-  ];
-
-  const data     = fuelTransactions.length ? fuelTransactions : defaultData;
-  const totalQty = data.reduce((s, f) => s + (f.quantity || 0), 0);
-  const totalCost= data.reduce((s, f) => s + (f.total_cost || f.cost || 0), 0);
+export function exportFuelReport(range = 'month', fuelTransactions = [], siteId = null) {
+  const filtered  = filterBySite(fuelTransactions, siteId);
+  const data      = filtered.length ? filtered : fuelTransactions;
+  const totalQty  = data.reduce((s, f) => s + (f.quantity || 0), 0);
+  const totalCost = data.reduce((s, f) => s + (f.total_cost || f.cost || 0), 0);
 
   const infoSheet = makeSheet([
     [COMPANY],
     [PLATFORM],
     ['RAPPORT CARBURANT'],
     [],
+    ['Carrière / Site',    siteLabel(siteId)],
     ['Période',            periodLabel(range)],
     ['Date de génération', today()],
     [],
@@ -125,13 +144,16 @@ export function exportFuelReport(range = 'month', fuelTransactions = []) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, infoSheet,   'Synthèse');
   XLSX.utils.book_append_sheet(wb, detailSheet, 'Consommation');
-  downloadXLSX(wb, `AMP_Rapport_Carburant_${fileDate()}.xlsx`);
+  const siteCode = SITE_OPTIONS.find(o => o.value === siteId)?.code || 'GLOBAL';
+  downloadXLSX(wb, `AMP_Rapport_Carburant_${siteCode}_${fileDate()}.xlsx`);
 }
 
 // ── 3. FINANCIER ───────────────────────────────────────────────────────────────
-export function exportFinancialReport(range = 'month', transactions = []) {
-  const income   = transactions.filter(t => t.type === 'income');
-  const expenses = transactions.filter(t => t.type === 'expense');
+export function exportFinancialReport(range = 'month', transactions = [], siteId = null) {
+  const filtered  = filterBySite(transactions, siteId);
+  const data      = filtered.length ? filtered : transactions;
+  const income    = data.filter(t => t.type === 'income');
+  const expenses  = data.filter(t => t.type === 'expense');
 
   const totalIncome   = income.reduce((s, t)   => s + (parseFloat(t.amount) || 0), 0);
   const totalExpenses = expenses.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
@@ -157,9 +179,10 @@ export function exportFinancialReport(range = 'month', transactions = []) {
     [PLATFORM],
     ['RAPPORT FINANCIER'],
     [],
+    ['Carrière / Site',    siteLabel(siteId)],
     ['Période',            periodLabel(range)],
     ['Date de génération', today()],
-    ['Transactions',       `${transactions.length} au total (${income.length} revenus, ${expenses.length} dépenses)`],
+    ['Transactions',       `${data.length} au total (${income.length} revenus, ${expenses.length} dépenses)`],
     [],
     ['── SYNTHÈSE FINANCIÈRE ──────────────────────────'],
     ['Total Revenus',      '',  '',  '',  '',  '',  totalIncome],
@@ -180,7 +203,8 @@ export function exportFinancialReport(range = 'month', transactions = []) {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, fullSheet, 'Rapport Financier');
-  downloadXLSX(wb, `AMP_Rapport_Financier_${fileDate()}.xlsx`);
+  const siteCode = SITE_OPTIONS.find(o => o.value === siteId)?.code || 'GLOBAL';
+  downloadXLSX(wb, `AMP_Rapport_Financier_${siteCode}_${fileDate()}.xlsx`);
 }
 
 // ── 4. ÉQUIPEMENT ──────────────────────────────────────────────────────────────
@@ -236,9 +260,10 @@ export function exportEquipmentReport(range = 'month', equipment = []) {
 }
 
 // ── 5. HUILE ───────────────────────────────────────────────────────────────────
-export function exportOilReport(range = 'month', oilTransactions = []) {
-  const entries = oilTransactions.filter(t => t.transaction_type === 'in');
-  const exits   = oilTransactions.filter(t => t.transaction_type === 'out');
+export function exportOilReport(range = 'month', oilTransactions = [], siteId = null) {
+  const data    = filterBySite(oilTransactions, siteId).length ? filterBySite(oilTransactions, siteId) : oilTransactions;
+  const entries = data.filter(t => t.transaction_type === 'in');
+  const exits   = data.filter(t => t.transaction_type === 'out');
 
   const totalEntryQty = entries.reduce((s, t) => s + (parseFloat(t.quantity) || 0), 0);
   const totalExitQty  = exits.reduce((s,  t) => s + (parseFloat(t.quantity) || 0), 0);
@@ -257,6 +282,7 @@ export function exportOilReport(range = 'month', oilTransactions = []) {
     [PLATFORM],
     ['RAPPORT GESTION HUILE'],
     [],
+    ['Carrière / Site',     siteLabel(siteId)],
     ['Période',             periodLabel(range)],
     ['Date de génération',  today()],
     [],
@@ -308,6 +334,7 @@ export function exportOilReport(range = 'month', oilTransactions = []) {
   XLSX.utils.book_append_sheet(wb, synthSheet, 'Synthèse');
   XLSX.utils.book_append_sheet(wb, entrySheet, 'Entrées');
   XLSX.utils.book_append_sheet(wb, exitSheet,  'Sorties');
-  downloadXLSX(wb, `AMP_Rapport_Huile_${fileDate()}.xlsx`);
+  const siteCode = SITE_OPTIONS.find(o => o.value === siteId)?.code || 'GLOBAL';
+  downloadXLSX(wb, `AMP_Rapport_Huile_${siteCode}_${fileDate()}.xlsx`);
 }
 

@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "components/navigation/AppLayout";
 import Icon from "components/AppIcon";
 import Button from "components/ui/Button";
-import { miningService } from "../../config/supabase.js";
+import { miningService, supabase } from "../../config/supabase.js";
 import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function Administration() {
   const navigate = useNavigate();
@@ -27,8 +28,9 @@ export default function Administration() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [sites, setSites] = useState([]);
+  const [saving, setSaving] = useState(false);
 
-  
   // États des formulaires
   const [newUser, setNewUser] = useState({
     username: '',
@@ -36,7 +38,8 @@ export default function Administration() {
     password: '',
     full_name: '',
     role: 'operator',
-    department: ''
+    department: '',
+    site_id: '',
   });
 
   const [editUser, setEditUser] = useState({
@@ -45,7 +48,8 @@ export default function Administration() {
     email: '',
     full_name: '',
     role: '',
-    department: ''
+    department: '',
+    site_id: '',
   });
 
   // Paramètres système
@@ -63,6 +67,7 @@ export default function Administration() {
   useEffect(() => {
     loadUsers();
     loadStats();
+    supabase.from('sites').select('id, name, code').order('name').then(({ data }) => setSites(data || []));
   }, []);
 
   const loadStats = async () => {
@@ -97,46 +102,32 @@ export default function Administration() {
 
 
   // Ajouter un utilisateur
-      const handleAddUser = async () => {
-    try {
-      if (!newUser.username || !newUser.email || !newUser.full_name) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-      }
-
-      if (!newUser.password || newUser.password.length < 6) {
-        alert('Le mot de passe doit contenir au moins 6 caractères');
-        return;
-      }
-
-      const result = await miningService.createUser(
-        newUser.email,
-        newUser.password,
-        {
-          username: newUser.username,
-          full_name: newUser.full_name,
-          role: newUser.role,
-          department: newUser.department
-        }
-      );
-
-      if (result.error) throw result.error;
-
-      await Promise.all([loadUsers(), loadStats()]);
-      setShowAddModal(false);
-      setNewUser({
-        username: '',
-        email: '',
-        password: '',
-        full_name: '',
-        role: 'operator',
-        department: ''
-      });
-      alert('Utilisateur créé avec succès! Un email de confirmation a été envoyé.');
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'utilisateur:', error);
-      alert('Erreur lors de l\'ajout de l\'utilisateur: ' + (error.message || 'Erreur inconnue'));
+  const handleAddUser = async () => {
+    if (!newUser.username || !newUser.email || !newUser.full_name) {
+      toast.error('Remplissez tous les champs obligatoires (*)');
+      return;
     }
+    if (!newUser.password || newUser.password.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+    setSaving(true);
+    const result = await miningService.createUser(newUser.email, newUser.password, {
+      username:   newUser.username,
+      full_name:  newUser.full_name,
+      role:       newUser.role,
+      department: newUser.department,
+      site_id:    newUser.site_id || null,
+    });
+    setSaving(false);
+    if (result.error) {
+      toast.error('Erreur : ' + result.error.message);
+      return;
+    }
+    toast.success('Utilisateur créé avec succès');
+    setShowAddModal(false);
+    setNewUser({ username: '', email: '', password: '', full_name: '', role: 'operator', department: '', site_id: '' });
+    await Promise.all([loadUsers(), loadStats()]);
   };
 
 
@@ -144,59 +135,50 @@ export default function Administration() {
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setEditUser({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      department: user.department
+      id:         user.id,
+      username:   user.username,
+      email:      user.email,
+      full_name:  user.full_name,
+      role:       user.role,
+      department: user.department || '',
+      site_id:    user.site_id || '',
     });
     setShowEditModal(true);
   };
 
   const handleSaveEdit = async () => {
-    try {
-      if (!editUser.username || !editUser.email || !editUser.full_name) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-      }
-
-      const result = await miningService.updateUser(editUser.id, {
-        username: editUser.username,
-        full_name: editUser.full_name,
-        role: editUser.role,
-        department: editUser.department
-      });
-
-      if (result.error) throw result.error;
-
-      await Promise.all([loadUsers(), loadStats()]); // Recharger liste et stats
-      setShowEditModal(false);
-      setSelectedUser(null);
-      alert('Utilisateur modifié avec succès!');
-    } catch (error) {
-      console.error("Erreur modification utilisateur:", error);
-      alert('Erreur lors de la modification: ' + (error.message || 'Erreur inconnue'));
+    if (!editUser.username || !editUser.email || !editUser.full_name) {
+      toast.error('Remplissez tous les champs obligatoires (*)');
+      return;
     }
+    setSaving(true);
+    const result = await miningService.updateUser(editUser.id, {
+      username:   editUser.username,
+      full_name:  editUser.full_name,
+      role:       editUser.role,
+      department: editUser.department,
+      site_id:    editUser.site_id || null,
+    });
+    setSaving(false);
+    if (result.error) { toast.error('Erreur : ' + result.error.message); return; }
+    toast.success('Utilisateur modifié');
+    setShowEditModal(false);
+    setSelectedUser(null);
+    await Promise.all([loadUsers(), loadStats()]);
   };
 
 
   // Activer/Désactiver un utilisateur
   const handleToggleUserStatus = async (userId) => {
     try {
-      const user = users.find(u => u.id === userId);
-      if (!user) return;
-
-      const result = await miningService.updateUser(userId, {
-        is_active: !user.is_active
-      });
-
+      const u = users.find(u => u.id === userId);
+      if (!u) return;
+      const result = await miningService.updateUser(userId, { is_active: !u.is_active });
       if (result.error) throw result.error;
-
-      await Promise.all([loadUsers(), loadStats()]); // Recharger liste et stats
+      toast.success(u.is_active ? 'Utilisateur désactivé' : 'Utilisateur activé');
+      await Promise.all([loadUsers(), loadStats()]);
     } catch (error) {
-      console.error("Erreur changement statut utilisateur:", error);
-      alert('Erreur lors du changement de statut: ' + (error.message || 'Erreur inconnue'));
+      toast.error('Erreur statut : ' + (error.message || 'Erreur inconnue'));
     }
   };
 
@@ -204,15 +186,11 @@ export default function Administration() {
   // Supprimer un utilisateur
   const handleDeleteUser = async () => {
     if (!confirmDeleteId) return;
-    try {
-      const result = await miningService.deleteUser(confirmDeleteId);
-      if (result.error) throw result.error;
-      setConfirmDeleteId(null);
-      await Promise.all([loadUsers(), loadStats()]);
-    } catch (error) {
-      console.error("Erreur suppression utilisateur:", error);
-      alert('Erreur lors de la suppression: ' + (error.message || 'Erreur inconnue'));
-    }
+    const result = await miningService.deleteUser(confirmDeleteId);
+    if (result.error) { toast.error('Erreur suppression : ' + result.error.message); return; }
+    toast.success('Utilisateur supprimé');
+    setConfirmDeleteId(null);
+    await Promise.all([loadUsers(), loadStats()]);
   };
 
 
@@ -686,7 +664,7 @@ export default function Administration() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
-                  Rôle
+                  Rôle *
                 </label>
                 <select
                   value={newUser.role}
@@ -696,10 +674,26 @@ export default function Administration() {
                 >
                   <option value="operator">Opérateur</option>
                   <option value="supervisor">Superviseur</option>
-                  <option value="admin">Administrateur</option>
-                  <option value="directeur">Directeur</option>
                   <option value="chef_de_site">Chef de site</option>
                   <option value="comptable">Comptable</option>
+                  <option value="secretaire">Secrétaire</option>
+                  <option value="equipement">Équipement</option>
+                  <option value="directeur">Directeur (PDG)</option>
+                  <option value="admin">Administrateur</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
+                  Carrière / Site
+                </label>
+                <select
+                  value={newUser.site_id}
+                  onChange={(e) => setNewUser({...newUser, site_id: e.target.value})}
+                  className="w-full p-2 rounded border"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                >
+                  <option value="">— Toutes les carrières (accès global) —</option>
+                  {sites.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
                 </select>
               </div>
               <div>
@@ -717,12 +711,15 @@ export default function Administration() {
               </div>
             </div>
             <div className="flex gap-3 mt-6 justify-end">
-              <Button variant="outline" onClick={() => setShowAddModal(false)}>
-                Annuler
-              </Button>
-              <Button variant="default" onClick={handleAddUser}>
-                Ajouter
-              </Button>
+              <Button variant="outline" onClick={() => setShowAddModal(false)}>Annuler</Button>
+              <button
+                onClick={handleAddUser}
+                disabled={saving}
+                className="px-5 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-2"
+                style={{ background: saving ? '#94A3B8' : 'var(--color-primary)', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}
+              >
+                {saving ? 'Création...' : 'Créer l\'utilisateur'}
+              </button>
             </div>
           </div>
         </div>
@@ -774,7 +771,7 @@ export default function Administration() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
-                  Rôle
+                  Rôle *
                 </label>
                 <select
                   value={editUser.role}
@@ -784,10 +781,26 @@ export default function Administration() {
                 >
                   <option value="operator">Opérateur</option>
                   <option value="supervisor">Superviseur</option>
-                  <option value="admin">Administrateur</option>
-                  <option value="directeur">Directeur</option>
                   <option value="chef_de_site">Chef de site</option>
                   <option value="comptable">Comptable</option>
+                  <option value="secretaire">Secrétaire</option>
+                  <option value="equipement">Équipement</option>
+                  <option value="directeur">Directeur (PDG)</option>
+                  <option value="admin">Administrateur</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--color-foreground)" }}>
+                  Carrière / Site
+                </label>
+                <select
+                  value={editUser.site_id || ''}
+                  onChange={(e) => setEditUser({...editUser, site_id: e.target.value})}
+                  className="w-full p-2 rounded border"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
+                >
+                  <option value="">— Toutes les carrières (accès global) —</option>
+                  {sites.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
                 </select>
               </div>
               <div>
@@ -804,12 +817,15 @@ export default function Administration() {
               </div>
             </div>
             <div className="flex gap-3 mt-6 justify-end">
-              <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                Annuler
-              </Button>
-              <Button variant="default" onClick={handleSaveEdit}>
-                Enregistrer
-              </Button>
+              <Button variant="outline" onClick={() => setShowEditModal(false)}>Annuler</Button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving}
+                className="px-5 py-2 rounded-lg text-sm font-semibold text-white"
+                style={{ background: saving ? '#94A3B8' : 'var(--color-primary)', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}
+              >
+                {saving ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
             </div>
           </div>
         </div>

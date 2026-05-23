@@ -9,6 +9,7 @@ import Icon from "../../components/AppIcon";
 import Button from "../../components/ui/Button";
 import { miningService } from "../../config/supabase";
 import { useAuth } from "../../context/AuthContext";
+import { useSite } from "../../context/SiteContext";
 import toast from "../../utils/toast";
 import { default as hotToast } from "react-hot-toast";
 import { exportFuelReport } from "../../utils/excelExport";
@@ -24,6 +25,7 @@ const inputClass = "w-full px-4 py-3 text-sm rounded-lg border transition-colors
 export default function FuelManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { effectiveSiteId } = useSite();
 
   const [consumption, setConsumption] = useState([]);
   const [fuelEntries, setFuelEntries] = useState([]);
@@ -62,7 +64,7 @@ export default function FuelManagement() {
   const loadFuelData = async () => {
     setLoading(true);
     try {
-      const { data, error } = await miningService.getFuelTransactions();
+      const { data, error } = await miningService.getFuelTransactions(effectiveSiteId);
       if (error) {
         toast.error(`Erreur chargement: ${error.message}`);
       } else {
@@ -109,7 +111,7 @@ export default function FuelManagement() {
     loadFuelData();
     loadFuelEntries();
     loadEquipment();
-  }, []);
+  }, [effectiveSiteId]);
 
   const totalConsumption = consumption.reduce((s, i) => s + parseFloat(i.quantity || 0), 0);
   const totalCost = consumption.reduce((s, i) => s + parseFloat(i.cost || 0), 0);
@@ -165,7 +167,7 @@ export default function FuelManagement() {
     }
     const loadingId = hotToast.loading("Enregistrement...", { position: "top-right" });
     try {
-      const { error } = await miningService.addFuelTransaction(newEntry);
+      const { error } = await miningService.addFuelTransaction(newEntry, effectiveSiteId);
       toast.dismiss(loadingId);
       if (error) {
         toast.error(`Erreur: ${error.message}`);
