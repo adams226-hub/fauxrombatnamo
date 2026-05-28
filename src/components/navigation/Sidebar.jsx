@@ -8,7 +8,7 @@ const NAV_ITEMS = [
     label: 'Tableau de Bord',
     icon: 'LayoutDashboard',
     path: '/executive-dashboard',
-    roles: ['directeur', 'comptable'],
+    roles: ['admin', 'directeur', 'comptable'],
     badge: null,
   },
   {
@@ -16,7 +16,7 @@ const NAV_ITEMS = [
     label: 'Production',
     icon: 'BarChart3',
     path: '/production-management',
-    roles: ['directeur', 'production', 'supervisor', 'operator'],
+    roles: ['admin', 'directeur', 'production', 'supervisor', 'operator'],
     badge: null,
   },
   {
@@ -24,7 +24,7 @@ const NAV_ITEMS = [
     label: 'Stock',
     icon: 'Layers',
     path: '/stock-management',
-    roles: ['directeur', 'production', 'supervisor', 'operator'],
+    roles: ['admin', 'directeur', 'production', 'supervisor', 'operator'],
     badge: null,
   },
   {
@@ -32,7 +32,7 @@ const NAV_ITEMS = [
     label: 'Équipement',
     icon: 'Wrench',
     path: '/equipment-management',
-    roles: ['directeur', 'equipement_maintenance', 'equipement_carburant', 'equipement_huile', 'chef_de_site', 'equipement'],
+    roles: ['admin', 'directeur', 'equipement_maintenance', 'equipement_carburant', 'equipement_huile', 'chef_de_site', 'equipement'],
     badge: null,
   },
   {
@@ -40,7 +40,7 @@ const NAV_ITEMS = [
     label: 'Carburant',
     icon: 'Fuel',
     path: '/fuel-management',
-    roles: ['directeur', 'equipement_carburant'],
+    roles: ['admin', 'directeur', 'equipement_carburant'],
     badge: null,
   },
   {
@@ -48,7 +48,7 @@ const NAV_ITEMS = [
     label: 'Maintenance',
     icon: 'ShieldAlert',
     path: '/maintenance-prevention',
-    roles: ['directeur', 'equipement_maintenance', 'chef_de_site', 'equipement'],
+    roles: ['admin', 'directeur', 'equipement_maintenance', 'chef_de_site', 'equipement'],
     badge: null,
   },
   {
@@ -56,7 +56,7 @@ const NAV_ITEMS = [
     label: 'Gestion Huile',
     icon: 'Droplets',
     path: '/oil-management',
-    roles: ['directeur', 'equipement_huile', 'chef_de_site', 'equipement'],
+    roles: ['admin', 'directeur', 'equipement_huile', 'chef_de_site', 'equipement'],
     badge: null,
   },
   {
@@ -64,7 +64,7 @@ const NAV_ITEMS = [
     label: 'Pièces de Rechange',
     icon: 'Package',
     path: '/spare-parts',
-    roles: ['directeur', 'equipement_huile', 'chef_de_site', 'equipement'],
+    roles: ['admin', 'directeur', 'equipement_huile', 'chef_de_site', 'equipement'],
     badge: null,
   },
   {
@@ -72,7 +72,7 @@ const NAV_ITEMS = [
     label: 'Comptabilité',
     icon: 'DollarSign',
     path: '/accounting',
-    roles: ['directeur', 'comptable'],
+    roles: ['admin', 'directeur', 'comptable'],
     badge: null,
   },
   {
@@ -80,7 +80,7 @@ const NAV_ITEMS = [
     label: 'Commandes Projets',
     icon: 'ClipboardList',
     path: '/project-orders',
-    roles: ['directeur', 'admin', 'comptable', 'secretaire', 'supervisor', 'operator', 'chef_de_site'],
+    roles: ['admin', 'directeur', 'comptable', 'secretaire', 'supervisor', 'operator', 'chef_de_site'],
     badge: null,
   },
   {
