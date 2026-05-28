@@ -5,14 +5,25 @@ const AuthContext = createContext(null);
 
 // Permissions par rôle : quelles routes chaque rôle peut accéder
 const ROLE_PERMISSIONS = {
-  admin:        ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/administration', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts', '/project-orders'],
-  directeur:    ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/stock-management', '/data-explorer', '/maintenance-prevention', '/spare-parts', '/project-orders'],
-  chef_de_site: ['/', '/equipment-management', '/oil-management', '/data-explorer', '/maintenance-prevention', '/spare-parts', '/project-orders'],
-  comptable:    ['/', '/accounting', '/data-explorer'],
-  equipement:   ['/', '/equipment-management', '/oil-management', '/accounting', '/data-explorer', '/maintenance-prevention', '/spare-parts'],
-  supervisor:   ['/', '/production-management', '/stock-management', '/data-explorer', '/project-orders'],
-  operator:     ['/', '/production-management', '/stock-management', '/project-orders'],
-  secretaire:   ['/', '/project-orders'],
+  // ── Globaux ───────────────────────────────────────────────
+  admin:                  ['/', '/administration'],
+  directeur:              ['/', '/executive-dashboard', '/production-management', '/equipment-management', '/fuel-management', '/oil-management', '/accounting', '/stock-management', '/maintenance-prevention', '/spare-parts', '/project-orders'],
+
+  // ── Comptable (accès global Didri + Koro) ─────────────────
+  comptable:              ['/', '/executive-dashboard', '/accounting', '/project-orders'],
+
+  // ── Rôles spécialisés DIDRI ou KORO ───────────────────────
+  production:             ['/', '/production-management', '/stock-management'],
+  equipement_maintenance: ['/', '/equipment-management', '/maintenance-prevention'],
+  equipement_carburant:   ['/', '/equipment-management', '/fuel-management'],
+  equipement_huile:       ['/', '/equipment-management', '/oil-management', '/spare-parts'],
+
+  // ── Anciens rôles conservés pour compatibilité ────────────
+  chef_de_site:           ['/', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts', '/project-orders'],
+  equipement:             ['/', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts'],
+  supervisor:             ['/', '/production-management', '/stock-management', '/project-orders'],
+  operator:               ['/', '/production-management', '/stock-management'],
+  secretaire:             ['/', '/project-orders'],
 };
 
 export function AuthProvider({ children }) {
@@ -117,17 +128,25 @@ export function AuthProvider({ children }) {
   const getDefaultRoute = () => {
     if (!user) return '/login';
     switch (user.role) {
-      case 'admin':
       case 'directeur':
         return '/executive-dashboard';
-      case 'chef_de_site':
-        return '/equipment-management';
+      case 'admin':
+        return '/administration';
       case 'comptable':
+        return '/executive-dashboard';
+      case 'production':
+        return '/production-management';
+      case 'equipement_maintenance':
+      case 'equipement_carburant':
+      case 'equipement_huile':
+      case 'chef_de_site':
       case 'equipement':
-        return '/accounting';
+        return '/equipment-management';
       case 'supervisor':
       case 'operator':
         return '/production-management';
+      case 'secretaire':
+        return '/project-orders';
       default:
         return '/executive-dashboard';
     }
