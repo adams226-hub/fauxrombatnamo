@@ -17,16 +17,16 @@ const ROLE_PERMISSIONS = {
   comptable:              ['/', '/executive-dashboard', '/accounting', '/project-orders'],
 
   // ── Rôles spécialisés par site ────────────────────────────
-  production:             ['/', '/production-management', '/stock-management'],
-  equipement_maintenance: ['/', '/equipment-management', '/maintenance-prevention'],
-  equipement_carburant:   ['/', '/equipment-management', '/fuel-management'],
-  equipement_huile:       ['/', '/equipment-management', '/oil-management', '/spare-parts'],
+  production:             ['/', '/executive-dashboard', '/production-management', '/stock-management'],
+  equipement_maintenance: ['/', '/executive-dashboard', '/equipment-management', '/maintenance-prevention'],
+  equipement_carburant:   ['/', '/executive-dashboard', '/equipment-management', '/fuel-management'],
+  equipement_huile:       ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/spare-parts'],
 
   // ── Anciens rôles conservés ───────────────────────────────
-  chef_de_site:           ['/', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts', '/project-orders'],
-  equipement:             ['/', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts'],
-  supervisor:             ['/', '/production-management', '/stock-management', '/project-orders'],
-  operator:               ['/', '/production-management', '/stock-management'],
+  chef_de_site:           ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts', '/project-orders'],
+  equipement:             ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts'],
+  supervisor:             ['/', '/executive-dashboard', '/production-management', '/stock-management', '/project-orders'],
+  operator:               ['/', '/executive-dashboard', '/production-management', '/stock-management'],
   secretaire:             ['/', '/project-orders'],
 };
 
@@ -138,13 +138,12 @@ export function AuthProvider({ children }) {
       case 'comptable':
         return '/executive-dashboard';
       case 'production':
-        return '/production-management';
       case 'equipement_maintenance':
       case 'equipement_carburant':
       case 'equipement_huile':
       case 'chef_de_site':
       case 'equipement':
-        return '/equipment-management';
+        return '/executive-dashboard';
       case 'supervisor':
       case 'operator':
         return '/production-management';

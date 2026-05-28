@@ -8,7 +8,7 @@ const NAV_ITEMS = [
     label: 'Tableau de Bord',
     icon: 'LayoutDashboard',
     path: '/executive-dashboard',
-    roles: ['admin', 'directeur', 'comptable'],
+    roles: ['admin', 'directeur', 'comptable', 'production', 'equipement_maintenance', 'equipement_carburant', 'equipement_huile', 'chef_de_site', 'equipement', 'supervisor', 'operator'],
     badge: null,
   },
   {

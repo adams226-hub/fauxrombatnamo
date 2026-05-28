@@ -90,7 +90,7 @@ const AppRoutes = () => {
       <Route path="/" element={<RoleBasedRedirect />} />
       
       <Route path="/executive-dashboard" element={
-        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'comptable']}>
+        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'comptable', 'production', 'equipement_maintenance', 'equipement_carburant', 'equipement_huile', 'chef_de_site', 'equipement', 'supervisor', 'operator']}>
           <ExecutiveDashboard />
         </ProtectedRouteWrapper>
       } />
