@@ -20,14 +20,6 @@ const NAV_ITEMS = [
     badge: null,
   },
   {
-    id: 'stock',
-    label: 'Stock',
-    icon: 'Layers',
-    path: '/stock-management',
-    roles: ['admin', 'directeur', 'production', 'supervisor', 'operator'],
-    badge: null,
-  },
-  {
     id: 'equipment',
     label: 'Équipement',
     icon: 'Wrench',

@@ -390,9 +390,9 @@ export default function ProductionManagement() {
               <Icon name="Activity" size={20} color="var(--color-warning)" />
             </div>
             <div>
-              <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Moyenne/Saisie</p>
+              <p className="text-sm" style={{ color: "var(--color-muted-foreground)" }}>Total Saisi</p>
               <p className="text-xl font-bold" style={{ color: "var(--color-foreground)" }}>
-                {productionData.length > 0 ? (totalProduction / productionData.length).toFixed(1) : 0} t
+                {productionData.length}
               </p>
             </div>
           </div>

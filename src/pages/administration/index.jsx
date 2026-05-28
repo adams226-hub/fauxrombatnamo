@@ -202,35 +202,25 @@ export default function Administration() {
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'directeur':              return '#7C3AED';
-      case 'admin':                  return '#E55B2D';
-      case 'comptable':              return '#10B981';
-      case 'production':             return '#2C5530';
-      case 'equipement_maintenance': return '#F59E0B';
-      case 'equipement_carburant':   return '#2563EB';
-      case 'equipement_huile':       return '#0891B2';
-      case 'secretaire':             return '#EC4899';
-      case 'chef_de_site':           return '#F59E0B';
-      case 'equipement':             return '#6366F1';
-      default:                       return 'var(--color-muted-foreground)';
+      case 'admin': return 'var(--color-primary)';
+      case 'supervisor': return 'var(--color-warning)';
+      case 'operator': return 'var(--color-success)';
+      case 'directeur': return '#8B5CF6';
+      case 'chef_de_site': return '#F59E0B';
+      case 'comptable': return '#10B981';
+      default: return 'var(--color-muted-foreground)';
     }
   };
 
   const getRoleText = (role) => {
     switch (role) {
-      case 'directeur':              return 'PDG / Directeur';
-      case 'admin':                  return 'Administrateur';
-      case 'comptable':              return 'Comptable';
-      case 'production':             return 'Production';
-      case 'equipement_maintenance': return 'Équip. / Maintenance';
-      case 'equipement_carburant':   return 'Équip. / Carburant';
-      case 'equipement_huile':       return 'Équip. / Huile & Pièces';
-      case 'secretaire':             return 'Secrétaire';
-      case 'chef_de_site':           return 'Chef de site';
-      case 'equipement':             return 'Équipement';
-      case 'supervisor':             return 'Superviseur';
-      case 'operator':               return 'Opérateur';
-      default:                       return role;
+      case 'admin': return 'Administrateur';
+      case 'supervisor': return 'Superviseur';
+      case 'operator': return 'Opérateur';
+      case 'directeur': return 'Directeur';
+      case 'chef_de_site': return 'Chef de site';
+      case 'comptable': return 'Comptable';
+      default: return role;
     }
   };
 
@@ -682,13 +672,13 @@ export default function Administration() {
                   className="w-full p-2 rounded border"
                   style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
                 >
-                  <option value="directeur">PDG / Directeur</option>
+                  <option value="operator">Opérateur</option>
+                  <option value="supervisor">Superviseur</option>
+                  <option value="chef_de_site">Chef de site</option>
                   <option value="comptable">Comptable</option>
-                  <option value="production">Production</option>
-                  <option value="equipement_maintenance">Équipement / Maintenance</option>
-                  <option value="equipement_carburant">Équipement / Carburant</option>
-                  <option value="equipement_huile">Équipement / Huile & Pièces</option>
                   <option value="secretaire">Secrétaire</option>
+                  <option value="equipement">Équipement</option>
+                  <option value="directeur">Directeur (PDG)</option>
                   <option value="admin">Administrateur</option>
                 </select>
               </div>
@@ -789,13 +779,13 @@ export default function Administration() {
                   className="w-full p-2 rounded border"
                   style={{ borderColor: "var(--color-border)", background: "var(--color-background)", color: "var(--color-foreground)" }}
                 >
-                  <option value="directeur">PDG / Directeur</option>
+                  <option value="operator">Opérateur</option>
+                  <option value="supervisor">Superviseur</option>
+                  <option value="chef_de_site">Chef de site</option>
                   <option value="comptable">Comptable</option>
-                  <option value="production">Production</option>
-                  <option value="equipement_maintenance">Équipement / Maintenance</option>
-                  <option value="equipement_carburant">Équipement / Carburant</option>
-                  <option value="equipement_huile">Équipement / Huile & Pièces</option>
                   <option value="secretaire">Secrétaire</option>
+                  <option value="equipement">Équipement</option>
+                  <option value="directeur">Directeur (PDG)</option>
                   <option value="admin">Administrateur</option>
                 </select>
               </div>
