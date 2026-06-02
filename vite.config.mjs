@@ -2,6 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import tagger from "@dhiwise/component-tagger";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const src = path.resolve(__dirname, "src");
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +16,17 @@ export default defineConfig({
     sourcemap: false,
     commonjsOptions: {
       include: [/xlsx/, /node_modules/],
+    },
+  },
+  resolve: {
+    alias: {
+      components: path.join(src, "components"),
+      pages:      path.join(src, "pages"),
+      utils:      path.join(src, "utils"),
+      config:     path.join(src, "config"),
+      context:    path.join(src, "context"),
+      hooks:      path.join(src, "hooks"),
+      assets:     path.join(src, "assets"),
     },
   },
   optimizeDeps: {
