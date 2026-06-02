@@ -14,7 +14,7 @@ const ROLE_PERMISSIONS = {
   directeur:              ALL_ROUTES.filter(r => r !== '/administration'),
 
   // ── Comptable : tableau de bord + compta uniquement ───────
-  comptable:              ['/', '/executive-dashboard', '/accounting'],
+  comptable:              ['/', '/executive-dashboard', '/accounting', '/project-orders'],
 
   // ── Rôles spécialisés par site ────────────────────────────
   production:             ['/', '/executive-dashboard', '/production-management', '/stock-management'],

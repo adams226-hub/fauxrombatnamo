@@ -176,7 +176,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/project-orders" element={
-        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur']}>
+        <ProtectedRouteWrapper allowedRoles={['admin', 'directeur', 'comptable']}>
           <ProjectOrders />
         </ProtectedRouteWrapper>
       } />

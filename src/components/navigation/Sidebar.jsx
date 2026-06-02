@@ -72,7 +72,7 @@ const NAV_ITEMS = [
     label: 'Commandes Projets',
     icon: 'ClipboardList',
     path: '/project-orders',
-    roles: ['admin', 'directeur'],
+    roles: ['admin', 'directeur', 'comptable'],
     badge: null,
   },
   {
