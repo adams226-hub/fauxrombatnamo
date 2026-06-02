@@ -13,8 +13,8 @@ const ROLE_PERMISSIONS = {
   // ── PDG : tout sauf Administration ───────────────────────
   directeur:              ALL_ROUTES.filter(r => r !== '/administration'),
 
-  // ── Comptable : tableau de bord + compta + commandes ─────
-  comptable:              ['/', '/executive-dashboard', '/accounting', '/project-orders'],
+  // ── Comptable : tableau de bord + compta uniquement ───────
+  comptable:              ['/', '/executive-dashboard', '/accounting'],
 
   // ── Rôles spécialisés par site ────────────────────────────
   production:             ['/', '/executive-dashboard', '/production-management', '/stock-management'],
@@ -23,11 +23,11 @@ const ROLE_PERMISSIONS = {
   equipement_huile:       ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/spare-parts'],
 
   // ── Anciens rôles conservés ───────────────────────────────
-  chef_de_site:           ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts', '/project-orders'],
+  chef_de_site:           ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts'],
   equipement:             ['/', '/executive-dashboard', '/equipment-management', '/oil-management', '/maintenance-prevention', '/spare-parts'],
-  supervisor:             ['/', '/executive-dashboard', '/production-management', '/stock-management', '/project-orders'],
+  supervisor:             ['/', '/executive-dashboard', '/production-management', '/stock-management'],
   operator:               ['/', '/executive-dashboard', '/production-management', '/stock-management'],
-  secretaire:             ['/', '/project-orders'],
+  secretaire:             ['/', '/executive-dashboard'],
 };
 
 export function AuthProvider({ children }) {
