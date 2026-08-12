@@ -1061,7 +1061,7 @@ export const miningService = {
       .from('project_orders')
       .select(`
         *,
-        project:project_id(id, name, code, client),
+        project:project_id(id, name, code, client, client_address, client_rccm, client_ifu, client_phone),
         items:project_order_items(*),
         creator:created_by(id, full_name, email),
         approver:approved_by(id, full_name, email)

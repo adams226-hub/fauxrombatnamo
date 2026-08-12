@@ -66,7 +66,10 @@ export default function ProjectOrders() {
   const [submitting, setSubmitting] = useState(false);
 
   // État nouveau projet
-  const [projectForm, setProjectForm] = useState({ name: '', code: '', client: '', chef_projet: '', description: '' });
+  const [projectForm, setProjectForm] = useState({
+    name: '', code: '', client: '', chef_projet: '', description: '',
+    client_address: '', client_rccm: '', client_ifu: '', client_phone: '',
+  });
   const [addingProject, setAddingProject] = useState(false);
 
   // État refus
@@ -170,7 +173,10 @@ export default function ProjectOrders() {
     setAddingProject(false);
     if (error) { toast.error('Erreur: ' + error.message); return; }
     toast.success('Projet créé');
-    setProjectForm({ name: '', code: '', client: '', chef_projet: '', description: '' });
+    setProjectForm({
+      name: '', code: '', client: '', chef_projet: '', description: '',
+      client_address: '', client_rccm: '', client_ifu: '', client_phone: '',
+    });
     loadData();
   };
 
@@ -666,6 +672,38 @@ export default function ProjectOrders() {
                   value={projectForm.description}
                   onChange={e => setProjectForm(f => ({ ...f, description: e.target.value }))}
                   className="px-3 py-2.5 rounded-lg border text-sm resize-none sm:col-span-2"
+                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', borderColor: 'var(--color-border)' }}
+                />
+
+                <p className="text-xs font-medium sm:col-span-2 mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                  Coordonnées légales du client (affichées sur le bon d'enlèvement)
+                </p>
+                <textarea
+                  rows={2} placeholder={"Adresse (ex: Ouagadougou, ZAGTOULI HL\n04 BP 8704 Ouagadougou 04)"}
+                  value={projectForm.client_address}
+                  onChange={e => setProjectForm(f => ({ ...f, client_address: e.target.value }))}
+                  className="px-3 py-2.5 rounded-lg border text-sm resize-none sm:col-span-2"
+                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', borderColor: 'var(--color-border)' }}
+                />
+                <input
+                  type="text" placeholder="RCCM"
+                  value={projectForm.client_rccm}
+                  onChange={e => setProjectForm(f => ({ ...f, client_rccm: e.target.value }))}
+                  className="px-3 py-2.5 rounded-lg border text-sm"
+                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', borderColor: 'var(--color-border)' }}
+                />
+                <input
+                  type="text" placeholder="IFU"
+                  value={projectForm.client_ifu}
+                  onChange={e => setProjectForm(f => ({ ...f, client_ifu: e.target.value }))}
+                  className="px-3 py-2.5 rounded-lg border text-sm"
+                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', borderColor: 'var(--color-border)' }}
+                />
+                <input
+                  type="text" placeholder="Téléphone"
+                  value={projectForm.client_phone}
+                  onChange={e => setProjectForm(f => ({ ...f, client_phone: e.target.value }))}
+                  className="px-3 py-2.5 rounded-lg border text-sm sm:col-span-2"
                   style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', borderColor: 'var(--color-border)' }}
                 />
                 <button type="submit" disabled={addingProject}

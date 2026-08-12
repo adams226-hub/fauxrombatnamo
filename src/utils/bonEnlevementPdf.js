@@ -80,10 +80,23 @@ export async function generateBonEnlevementPDF(order) {
   doc.setFontSize(10.5);
   doc.text(clientName, marginX, y);
   y += 5.5;
-  if (order.delivery_site) {
-    doc.text(order.delivery_site, marginX, y);
-    y += 5.5;
+
+  const project = order.project || {};
+  const doitLines = [
+    ...(project.client_address ? project.client_address.split('\n') : []),
+    project.client_rccm ? `RCCM: ${project.client_rccm}` : null,
+    project.client_ifu ? `IFU : ${project.client_ifu}` : null,
+    project.client_phone ? `Téléphone: ${project.client_phone}` : null,
+  ].filter(Boolean);
+
+  if (!doitLines.length && order.delivery_site) {
+    doitLines.push(order.delivery_site);
   }
+
+  doitLines.forEach((line) => {
+    doc.text(line, marginX, y);
+    y += 5.5;
+  });
 
   y += 4;
 
