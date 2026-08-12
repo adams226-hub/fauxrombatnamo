@@ -944,7 +944,7 @@ function OrderCard({ order, isAdmin, onApprove, onReject, onDeliver }) {
           </button>
         )}
         {(order.status === 'approved' || order.status === 'delivered') && (
-          <button onClick={() => generateBonEnlevementPDF(order)}
+          <button onClick={() => generateBonEnlevementPDF(order).catch(() => toast.error('Erreur lors de la génération du bon'))}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold flex-shrink-0"
             style={{ background: 'rgba(229,91,45,0.12)', color: '#E55B2D' }}>
             <Icon name="Download" size={12} /> Bon d'enlèvement

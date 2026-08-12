@@ -2,23 +2,32 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 // Génération du "Bon d'enlèvement" (PDF réel) pour une commande projet validée.
-// Reprend la mise en forme du modèle papier AMP Center : en-tête, bloc "Doit :",
-// tableau désignation/unité/quantité, total, cadre légal de bas de page.
+// Reprend la mise en forme du modèle papier AMP Center : logo + pied de page
+// officiels (images), bloc "Doit :", tableau désignation/unité/quantité, total.
 
 const AMP_CENTER = {
-  brand: 'AMP Center',
   city: 'Ouagadougou',
-  footerLine1: 'SARL au capital de 5.000.000 fCFA - 04 BP 536 Ouagadougou 04',
-  footerLine2: 'Secteur 53 (ex sect15) - Parcelle 25 - Section Q - Lot 24',
-  footerLine3: 'Tél. : +226 25 34 06 80; E-mail: r.bationo@amp-bf.com',
-  footerLine4: "RCCM: BF OUA 2021-B3819; IFU N°00155843K - Régime Simplifié d'Imposition",
 };
+
+const LOGO_URL = '/assets/images/amp-center-logo.png';
+const LOGO_RATIO = 246 / 448; // hauteur / largeur de l'image source
+const FOOTER_URL = '/assets/images/amp-center-footer.png';
+const FOOTER_RATIO = 109 / 644;
 
 function formatNumber(n) {
   return (parseFloat(n) || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 }
 
-export function generateBonEnlevementPDF(order) {
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+export async function generateBonEnlevementPDF(order) {
   const items = order.items || [];
   const total = items.reduce((sum, it) => sum + (parseFloat(it.quantity_tons) || 0), 0);
   const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -27,22 +36,17 @@ export function generateBonEnlevementPDF(order) {
     ? `Livraison projet ${order.project.name}`.toUpperCase()
     : 'ENLEVEMENT DE MATERIAUX';
 
+  const [logoImg, footerImg] = await Promise.all([loadImage(LOGO_URL), loadImage(FOOTER_URL)]);
+
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 18;
   let y = 20;
 
-  // ── Logo + marque ────────────────────────────────────────────
-  doc.setFillColor(229, 91, 45); // #E55B2D
-  doc.roundedRect(marginX, y, 20, 20, 3, 3, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('AMP', marginX + 10, y + 12, { align: 'center' });
-
-  doc.setTextColor(44, 85, 48); // #2C5530
-  doc.setFontSize(10);
-  doc.text(AMP_CENTER.brand, marginX, y + 26);
+  // ── Logo officiel AMP Center ───────────────────────────────────
+  const logoWidth = 30;
+  const logoHeight = logoWidth * LOGO_RATIO;
+  doc.addImage(logoImg, 'PNG', marginX, y, logoWidth, logoHeight);
 
   // ── Date (haut droite) ───────────────────────────────────────
   doc.setTextColor(26, 26, 26);
@@ -50,7 +54,7 @@ export function generateBonEnlevementPDF(order) {
   doc.setFontSize(11);
   doc.text(`${AMP_CENTER.city}, le ${today}`, pageWidth - marginX, y + 6, { align: 'right' });
 
-  y += 38;
+  y += logoHeight + 14;
 
   // ── Titre ─────────────────────────────────────────────────────
   doc.setFont('helvetica', 'bold');
@@ -130,21 +134,12 @@ export function generateBonEnlevementPDF(order) {
   doc.setFontSize(10.5);
   doc.text('COMPTABILITE', pageWidth - marginX, finalY, { align: 'right' });
 
-  // ── Pied de page légal ───────────────────────────────────────
+  // ── Pied de page officiel AMP Center ───────────────────────────
   const pageHeight = doc.internal.pageSize.getHeight();
-  let footerY = pageHeight - 30;
-  doc.setDrawColor(44, 85, 48);
-  doc.setLineWidth(0.5);
-  doc.line(marginX, footerY, pageWidth - marginX, footerY);
-  footerY += 5;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(51, 51, 51);
-  [AMP_CENTER.footerLine1, AMP_CENTER.footerLine2, AMP_CENTER.footerLine3, AMP_CENTER.footerLine4].forEach((line) => {
-    doc.text(line, pageWidth / 2, footerY, { align: 'center' });
-    footerY += 4;
-  });
+  const footerWidth = pageWidth - marginX * 2;
+  const footerHeight = footerWidth * FOOTER_RATIO;
+  const footerY = pageHeight - footerHeight - 12;
+  doc.addImage(footerImg, 'PNG', marginX, footerY, footerWidth, footerHeight);
 
   doc.save(`Bon_Enlevement_${order.order_number || 'AMP'}.pdf`);
 }
