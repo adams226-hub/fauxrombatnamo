@@ -6,6 +6,7 @@ import { useSite } from '../../context/SiteContext';
 import { useAuth } from '../../context/AuthContext';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
+import { generateBonEnlevementPDF } from '../../utils/bonEnlevementPdf';
 
 // ─── Constantes ───────────────────────────────────────────────
 const DIMENSIONS = [
@@ -940,6 +941,13 @@ function OrderCard({ order, isAdmin, onApprove, onReject, onDeliver }) {
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold flex-shrink-0"
             style={{ background: 'rgba(37,99,235,0.12)', color: '#2563EB' }}>
             <Icon name="PackageCheck" size={12} /> Livré
+          </button>
+        )}
+        {(order.status === 'approved' || order.status === 'delivered') && (
+          <button onClick={() => generateBonEnlevementPDF(order)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold flex-shrink-0"
+            style={{ background: 'rgba(229,91,45,0.12)', color: '#E55B2D' }}>
+            <Icon name="Download" size={12} /> Bon d'enlèvement
           </button>
         )}
       </div>
